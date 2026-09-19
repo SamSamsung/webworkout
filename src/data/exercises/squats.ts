@@ -194,7 +194,7 @@ export const SQUATS: Exercise[] = [
     ],
     safetyTips: ["Travaille d'abord sur une box ou en te tenant à un support : la charge sur le genou est importante."],
     progressions: ["squat-pistolet-leste", "squat-shrimp"],
-    regressions: ["squat-pistolet-assiste", "squat-bulgare"],
+    regressions: ["squat-pistolet-assiste", "fente-bulgare"],
     tags: ["poids-du-corps", "unilateral", "elite", "equilibre"],
   }),
   squat({
@@ -267,7 +267,7 @@ export const SQUATS: Exercise[] = [
     ],
     commonMistakes: ["Laisser tomber le genou arrière au sol au lieu de le poser en contrôlant."],
     safetyTips: ["Pose un tapis fin sous le genou arrière."],
-    regressions: ["squat-bulgare"],
+    regressions: ["fente-bulgare"],
     tags: ["poids-du-corps", "unilateral", "elite"],
   }),
   squat({

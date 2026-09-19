@@ -69,13 +69,14 @@ export function family(base: Partial<Exercise> & { family: string }) {
       ...(addTips ?? []),
     ];
 
-    return {
-      ...FALLBACK,
-      ...base,
-      ...rest,
-      commonMistakes,
-      safetyTips,
-    } as Exercise;
+    const merged = { ...FALLBACK, ...base, ...rest } as Exercise;
+
+    // Une variante qui redéfinit ses muscles principaux hérite parfois de
+    // secondaires devenus redondants : on les retire pour garder des fiches
+    // cohérentes sans avoir à redéclarer la liste complète.
+    const secondaryMuscles = merged.secondaryMuscles.filter((m) => !merged.primaryMuscles.includes(m));
+
+    return { ...merged, secondaryMuscles, commonMistakes, safetyTips };
   };
 }
 
