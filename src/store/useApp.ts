@@ -8,6 +8,7 @@
  * cela garantit que l'XP, les badges, la série et les quêtes sont toujours
  * recalculés de façon cohérente après chaque action.
  */
+import { useMemo } from "react";
 import { create } from "zustand";
 import type {
   AppState,
@@ -317,7 +318,14 @@ export const useApp = create<AppStore>((set, get) => ({
   },
 }));
 
-/** Sélecteur pratique : informations de niveau dérivées de l'XP. */
+/**
+ * Sélecteur pratique : informations de niveau dérivées de l'XP.
+ *
+ * Le sélecteur ne renvoie que l'XP (une primitive) : `levelFromXp` produit un
+ * nouvel objet à chaque appel, et le renvoyer directement depuis le sélecteur
+ * ferait boucler `useSyncExternalStore` à l'infini.
+ */
 export function useLevel() {
-  return useApp((s) => levelFromXp(s.state.xp));
+  const xp = useApp((s) => s.state.xp);
+  return useMemo(() => levelFromXp(xp), [xp]);
 }

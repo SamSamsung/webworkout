@@ -12,6 +12,16 @@ import { Button, Card, Chip, EmptyState, SectionTitle, StatTile } from "@/compon
 import { AreaTrend, Bars, ColoredBars, RecordLine, type Point } from "./Charts";
 import { TrainingCalendar } from "./TrainingCalendar";
 
+/**
+ * Affiche un volume en kilogrammes tant qu'il reste sous la tonne, puis en
+ * tonnes avec une décimale : « 1 t » pour 945 kg serait trompeur.
+ */
+function formatTonnage(kg: number): { value: string; unit: string } {
+  if (kg < 1000) return { value: Math.round(kg).toLocaleString("fr-FR"), unit: "kg" };
+  if (kg < 100_000) return { value: (kg / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }), unit: "t" };
+  return { value: Math.round(kg / 1000).toLocaleString("fr-FR"), unit: "t" };
+}
+
 /** Page de suivi : statistiques globales, courbes, records et historique. */
 export function ProgressPage() {
   const state = useApp((s) => s.state);
@@ -149,8 +159,7 @@ export function ProgressPage() {
         <StatTile
           icon="🏋️"
           label="Volume soulevé"
-          value={Math.round(totals.volume / 1000).toLocaleString("fr-FR")}
-          unit="t"
+          {...formatTonnage(totals.volume)}
           color="#fbbf24"
           hint={`${Math.round(totals.volume).toLocaleString("fr-FR")} kg`}
         />

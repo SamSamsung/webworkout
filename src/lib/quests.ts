@@ -22,6 +22,14 @@ function hash(input: string): number {
 
 // ------------------------------------------------------- Quêtes hebdo
 
+/** Plus petit commun diviseur, pour choisir un pas de parcours valide. */
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+/** Pas candidats, testés dans l'ordre jusqu'à en trouver un premier avec la taille. */
+const STEPS = [5, 7, 11, 13, 1];
+
 /** Modèles de quêtes ; le tirage choisit trois modèles différents par semaine. */
 const QUEST_TEMPLATES: Array<(seed: number) => Omit<Quest, "id" | "week" | "progress" | "completed">> = [
   (seed) => {
@@ -94,12 +102,11 @@ const QUEST_TEMPLATES: Array<(seed: number) => Omit<Quest, "id" | "week" | "prog
 /** Génère les trois quêtes de la semaine indiquée. */
 export function generateWeeklyQuests(week = isoWeek()): Quest[] {
   const seed = hash(week);
-  const indices: number[] = [];
-  // Tirage sans remise sur les modèles disponibles.
-  for (let i = 0; indices.length < 3 && i < 20; i++) {
-    const idx = (seed + i * 7 + i * i) % QUEST_TEMPLATES.length;
-    if (!indices.includes(idx)) indices.push(idx);
-  }
+  // Tirage sans remise : on parcourt les modèles avec un pas premier avec
+  // leur nombre, ce qui garantit de visiter chaque indice exactement une fois.
+  const count = QUEST_TEMPLATES.length;
+  const step = STEPS.find((s) => gcd(s, count) === 1) ?? 1;
+  const indices = [0, 1, 2].map((i) => (seed + i * step) % count);
   return indices.map((idx, i) => {
     const base = QUEST_TEMPLATES[idx](seed + i * 101);
     return { ...base, id: `${week}-${idx}`, week, progress: 0, completed: false };
