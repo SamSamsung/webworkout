@@ -14,13 +14,20 @@ export function cx(...classes: Array<string | false | null | undefined>): string
 export function Card({
   children,
   className,
+  id,
   as: As = "div",
 }: {
   children: ReactNode;
   className?: string;
+  /** Ancre facultative, pour les liens profonds vers une carte précise. */
+  id?: string;
   as?: "div" | "section" | "article" | "li";
 }) {
-  return <As className={cx("card p-4", className)}>{children}</As>;
+  return (
+    <As id={id} className={cx("card p-4", className)}>
+      {children}
+    </As>
+  );
 }
 
 export function SectionTitle({
