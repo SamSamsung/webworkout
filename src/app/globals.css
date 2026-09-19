@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/*
+ * IronQuest — design system
+ * Thème sombre "arcade / RPG" : base ardoise profonde + accents néon.
+ * Chaque groupe musculaire possède sa couleur, réutilisée partout
+ * (badges, filtres, graphiques) pour créer une lecture visuelle immédiate.
+ */
+@theme {
+  --color-ink-950: #08070f;
+  --color-ink-900: #0d0b16;
+  --color-ink-850: #12101f;
+  --color-ink-800: #191629;
+  --color-ink-700: #241f3a;
+  --color-ink-600: #322b4d;
+  --color-ink-500: #4a4170;
+
+  --color-neon-violet: #a855f7;
+  --color-neon-cyan: #22d3ee;
+  --color-neon-lime: #a3e635;
+  --color-neon-amber: #fbbf24;
+  --color-neon-rose: #fb7185;
+  --color-neon-blue: #60a5fa;
+  --color-neon-orange: #fb923c;
+  --color-neon-emerald: #34d399;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+  --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  --animate-float: float 4s ease-in-out infinite;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: var(--color-ink-950);
+  color: #e9e6f5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  /* Halos radiaux discrets pour éviter un fond plat. */
+  background-image:
+    radial-gradient(900px 500px at 12% -8%, rgba(168, 85, 247, 0.16), transparent 60%),
+    radial-gradient(760px 460px at 92% 4%, rgba(34, 211, 238, 0.12), transparent 60%),
+    radial-gradient(700px 520px at 50% 108%, rgba(163, 230, 53, 0.08), transparent 60%);
+  background-attachment: fixed;
+  min-height: 100dvh;
+}
+
+/* Barre de défilement discrète mais visible sur fond sombre. */
+* { scrollbar-width: thin; scrollbar-color: var(--color-ink-600) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--color-ink-600); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@utility card {
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--color-ink-600) 70%, transparent);
+  background: color-mix(in oklab, var(--color-ink-850) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-ink-500) 60%, transparent);
+  padding: 0.15rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Respect des préférences d'accessibilité. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
