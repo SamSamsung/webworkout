@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AppShell } from "@/components/AppShell";
+import { Providers } from "@/components/Providers";
+import { BadgeToaster } from "@/components/BadgeToaster";
 
 export const metadata: Metadata = {
   title: {
@@ -7,11 +10,17 @@ export const metadata: Metadata = {
     template: "%s · IronQuest",
   },
   description:
-    "Base de données d'exercices de musculation exhaustive, suivi de records, séances chronométrées, XP, badges et défis entre amis.",
+    "472 exercices détaillés, suivi de records, séances chronométrées, XP, badges et défis entre amis. Fonctionne hors ligne, sans compte.",
   applicationName: "IronQuest",
-  keywords: ["musculation", "exercices", "fitness", "poids du corps", "street workout", "programme", "records"],
+  keywords: ["musculation", "exercices", "fitness", "poids du corps", "street workout", "programme", "records", "XP"],
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "IronQuest" },
+  openGraph: {
+    title: "IronQuest — la musculation qui se joue",
+    description: "La base d'exercices la plus complète, transformée en jeu de progression.",
+    type: "website",
+    locale: "fr_FR",
+  },
 };
 
 export const viewport: Viewport = {
@@ -24,7 +33,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <Providers>
+          <AppShell>{children}</AppShell>
+          <BadgeToaster />
+        </Providers>
+      </body>
     </html>
   );
 }
