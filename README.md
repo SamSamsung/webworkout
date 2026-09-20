@@ -162,8 +162,7 @@ src/
 │  ├─ exercices/             # Liste + fiche [id] (pré-rendue)
 │  ├─ seances/               # Modèles + éditeur (?id=…)
 │  ├─ entrainement/          # Séance en direct
-│  ├─ progression/ profil/ social/ outils/
-│  └─ hors-ligne/            # Page de repli du service worker
+│  └─ progression/ profil/ social/ outils/
 │
 ├─ types/
 │  ├─ exercise.ts            # Schéma de la base d'exercices (unions littérales)
@@ -317,7 +316,7 @@ Le site est alors publié sur `https://<utilisateur>.github.io/<dépôt>/`, le s
 ## PWA et mode hors ligne
 
 - **Manifeste** complet avec icônes 192 / 512 / maskable et trois raccourcis (séance, exercices, progression).
-- **Service worker** (`public/sw.js`) : réseau d'abord pour les navigations, cache d'abord pour les ressources versionnées, page `/hors-ligne` en dernier recours.
+- **Service worker** (`public/sw.js`) : réseau d'abord pour les navigations, cache d'abord pour les ressources versionnées. Seules les réponses valides sont mises en cache — une page d'erreur mise en cache resservirait indéfiniment. Une navigation hors ligne vers une page jamais visitée reçoit une page de repli en HTML autonome, volontairement hors de l'application : servir une page Next sous une autre URL laisserait le routeur client reprendre la main et afficher « Page introuvable », message faux puisque la page existe.
 - **Installation** : sur mobile, « Ajouter à l'écran d'accueil » ; sur desktop, l'icône d'installation dans la barre d'adresse.
 - Les données étant locales, **séances, records et badges restent pleinement accessibles sans connexion**.
 
