@@ -3,7 +3,6 @@
   "framework": "nextjs",
   "headers": [
     {
-      "comment": "Le service worker ne doit jamais être servi depuis un cache : sinon une ancienne version continue de piloter le site après un déploiement.",
       "source": "/sw.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
@@ -11,12 +10,10 @@
       ]
     },
     {
-      "comment": "Les icônes et le manifeste changent rarement et sont versionnés par le déploiement.",
-      "source": "/(icon-.*\\.png|apple-touch-icon\\.png|manifest\\.webmanifest)",
+      "source": "/(icon-.*\\.png|apple-touch-icon\\.png|favicon\\.ico|manifest\\.webmanifest)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }]
     },
     {
-      "comment": "En-têtes de sécurité de base : le site ne charge aucune ressource tierce.",
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },

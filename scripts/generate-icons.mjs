@@ -131,6 +131,27 @@ function renderIcon(size, { padding = 0 } = {}) {
   return encodePng(size, size, rgba);
 }
 
+/**
+ * Encapsule un PNG dans un conteneur ICO.
+ * Le format ICO accepte des images PNG depuis Windows Vista : un en-tête de
+ * 22 octets suffit, inutile de produire un bitmap indexé à l'ancienne.
+ */
+function pngToIco(png, size) {
+  const header = Buffer.alloc(22);
+  header.writeUInt16LE(0, 0); // réservé
+  header.writeUInt16LE(1, 2); // type : icône
+  header.writeUInt16LE(1, 4); // nombre d'images
+  header[6] = size >= 256 ? 0 : size; // largeur (0 signifie 256)
+  header[7] = size >= 256 ? 0 : size; // hauteur
+  header[8] = 0; // palette
+  header[9] = 0; // réservé
+  header.writeUInt16LE(1, 10); // plans
+  header.writeUInt16LE(32, 12); // bits par pixel
+  header.writeUInt32LE(png.length, 14);
+  header.writeUInt32LE(22, 18); // décalage des données
+  return Buffer.concat([header, png]);
+}
+
 mkdirSync(resolve(ROOT, "public"), { recursive: true });
 
 const outputs = [
@@ -140,6 +161,9 @@ const outputs = [
   // marge de sécurité de 10 % autour de l'éclair.
   ["public/icon-maskable-512.png", renderIcon(512, { padding: 512 * 0.14 })],
   ["public/apple-touch-icon.png", renderIcon(180)],
+  // Certains navigateurs et robots demandent /favicon.ico sans regarder les
+  // balises <link>, ce qui produirait un 404 à chaque visite.
+  ["public/favicon.ico", pngToIco(renderIcon(32), 32)],
 ];
 
 for (const [path, buffer] of outputs) {

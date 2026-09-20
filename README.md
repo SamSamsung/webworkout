@@ -279,7 +279,9 @@ Le projet est prêt à déployer tel quel : aucune route ne dépend d'un serveur
 ### Vercel (chemin principal)
 
 1. **Add New → Project**, importez le dépôt GitHub.
-2. Vercel détecte Next.js : laissez les réglages par défaut (`npm run build`, sortie `.next`). `vercel.json` est déjà fourni (en-têtes de sécurité, et surtout `Cache-Control: no-cache` sur `/sw.js`, sans quoi un ancien service worker continuerait de piloter le site après un déploiement).
+2. Vercel détecte Next.js : laissez les réglages par défaut (`npm run build`, sortie `.next`).
+
+   `vercel.json` est déjà fourni. Il pose des en-têtes de sécurité, met en cache les icônes, et surtout sert `/sw.js` avec `Cache-Control: no-cache` — sans quoi un ancien service worker continuerait de piloter le site après un déploiement. Attention si vous le modifiez : Vercel valide ce fichier contre un schéma strict et **refuse toute clé inconnue** (y compris un simple `comment`), ce qui fait échouer le déploiement avant même le build.
 3. Vérifiez la **branche de production** dans *Settings → Git → Production Branch* : elle doit pointer sur la branche qui contient l'application.
 4. *(facultatif)* Ajoutez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` dans *Settings → Environment Variables* pour activer la synchronisation, puis déclarez l'URL du déploiement dans les *Redirect URLs* de Supabase.
 
