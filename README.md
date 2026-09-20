@@ -2,7 +2,7 @@
 
 **La musculation qui se joue.** Une base d'exercices exhaustive doublée d'un système de progression façon RPG : XP, niveaux, badges, séries d'assiduité, quêtes hebdomadaires et défis entre amis.
 
-> **472 exercices** détaillés · **28 familles** de mouvement · **17 groupes musculaires** · **40 badges** · fonctionne **hors ligne**, **sans compte** et **sans backend**.
+> **475 exercices** détaillés · **29 familles** de mouvement · **17 groupes musculaires** · **7 défis chronométrés** · **40 badges** · fonctionne **hors ligne**, **sans compte** et **sans backend**.
 
 ---
 
@@ -32,7 +32,8 @@
 | **Accueil** | Niveau et rang, série d'assiduité, défi du jour, quêtes de la semaine, bilan hebdomadaire, dernière séance rejouable |
 | **Exercices** | Recherche instantanée et filtres cumulables (groupe musculaire, matériel, niveau, catégorie, lieu, favoris), 5 modes de tri |
 | **Fiche d'exercice** | Description, exécution pas à pas, erreurs fréquentes, consignes de sécurité, respiration, tempo, repos conseillé, carte musculaire, échelle de progression, variantes de la famille, record personnel |
-| **Séances** | Modèles personnalisés, générateur automatique, historique complet |
+| **Séances** | Modèles personnalisés, générateur automatique, historique complet. Le sélecteur d'exercices y reprend toute la richesse de la base : vignette des muscles sollicités, description, technique, erreurs à éviter et lien vers la fiche complète |
+| **Défis** | Bring Sally Up (pompes, squats, tractions), gainage, suspension, chaise au mur, L-sit : chronomètre, règle du jeu, paliers bronze → légende et record personnel |
 | **Entraînement** | Chronomètre, validation des séries, minuteur de repos sonore, XP et volume en direct, écran de fin avec records et badges |
 | **Progression** | Courbes d'XP cumulée, volume hebdomadaire, répartition par groupe musculaire, calendrier d'assiduité, records avec courbe de progression |
 | **Social** | Classement XP, gestion des amis, défis sur n'importe quel exercice |
@@ -45,18 +46,20 @@
 
 C'est le cœur du projet, et la partie la plus travaillée.
 
-**472 fiches** réparties ainsi :
+**475 fiches** réparties ainsi :
 
 | Groupe | Nb | Groupe | Nb | Groupe | Nb |
 | --- | ---: | --- | ---: | --- | ---: |
-| Pectoraux | 64 | Épaules | 46 | Avant-bras | 15 |
-| Corps entier | 64 | Quadriceps | 44 | Ischio-jambiers | 14 |
-| Dos | 58 | Fessiers | 23 | Mollets | 8 |
+| Pectoraux | 65 | Épaules | 46 | Avant-bras | 15 |
+| Corps entier | 64 | Quadriceps | 45 | Ischio-jambiers | 14 |
+| Dos | 59 | Fessiers | 23 | Mollets | 8 |
 | Abdominaux | 54 | Triceps | 21 | Lombaires | 7 |
 | Cardio | 17 | Biceps | 19 | Adducteurs / abducteurs / cou | 18 |
 
 **Par difficulté** : 127 niveau 1 · 120 niveau 2 · 105 niveau 3 · 77 niveau 4 · 43 niveau 5
 **Accessibilité** : 75 exercices sans aucun matériel · 293 réalisables à la maison · 113 unilatéraux
+
+La base contient aussi des **protocoles nommés** (famille `benchmarks`) : Bring Sally Up et les tests de maintien maximal. Ce ne sont pas des mouvements nouveaux mais des façons précises d'exécuter un mouvement connu, avec une règle du jeu et un score — les loger dans la base leur donne gratuitement records, courbes, XP et badges.
 
 **Les plus grosses familles** : pompes (54 variantes), squat (31), tractions (30), rowing (28), gainage (22), développé couché (21), curl biceps (20), extension de hanche (19), étirements (19).
 
@@ -83,7 +86,7 @@ Toute la taxonomie est typée par unions littérales : une fiche mal renseignée
 
 ### Illustrations
 
-Plutôt que 472 photos ou GIF à sourcer, héberger et maintenir, chaque fiche est illustrée par une **carte musculaire SVG** : une silhouette face et dos où les zones sollicitées s'allument — rose pour les muscles principaux, cyan pour les secondaires. Léger, cohérent, et immédiatement lisible.
+Plutôt que 475 photos ou GIF à sourcer, héberger et maintenir, chaque fiche est illustrée par une **carte musculaire SVG** : une silhouette face et dos où les zones sollicitées s'allument — rose pour les muscles principaux, cyan pour les secondaires. Léger, cohérent, et immédiatement lisible.
 
 ---
 
@@ -91,7 +94,7 @@ Plutôt que 472 photos ou GIF à sourcer, héberger et maintenir, chaque fiche e
 
 | Choix | Pourquoi |
 | --- | --- |
-| **Next.js 16 (App Router)** | Les 472 fiches sont **pré-rendues statiquement** (`generateStaticParams`) : navigation instantanée et excellent référencement, ce qui compte pour un site dont l'axe premier est informatif. |
+| **Next.js 16 (App Router)** | Les 475 fiches sont **pré-rendues statiquement** (`generateStaticParams`) : navigation instantanée et excellent référencement, ce qui compte pour un site dont l'axe premier est informatif. |
 | **React 19 + TypeScript strict** | La base d'exercices est typée de bout en bout. Une faute de frappe dans un nom de muscle est une erreur de compilation, pas un bug silencieux. |
 | **Tailwind CSS v4** | Design system déclaré une seule fois dans `globals.css` (`@theme`), couleurs par groupe musculaire réutilisées partout : filtres, badges, graphiques. |
 | **Zustand** | Un store minimal, sans boilerplate. Toutes les mutations passent par un point unique qui recalcule XP, records, série, quêtes et badges de façon cohérente. |
@@ -142,7 +145,7 @@ cp .env.example .env.local
 | Commande | Effet |
 | --- | --- |
 | `npm run dev` | Serveur de développement |
-| `npm run build` | Build de production (pré-rend les 472 fiches) |
+| `npm run build` | Build de production (pré-rend les 475 fiches) |
 | `npm start` | Sert le build de production |
 | `npm run lint` | ESLint (configuration `next/core-web-vitals` + `next/typescript`) |
 | `npm run typecheck` | Vérification TypeScript sans émission |
@@ -162,6 +165,7 @@ src/
 │  ├─ exercices/             # Liste + fiche [id] (pré-rendue)
 │  ├─ seances/               # Modèles + éditeur (?id=…)
 │  ├─ entrainement/          # Séance en direct
+│  ├─ defis/                 # Défis chronométrés
 │  └─ progression/ profil/ social/ outils/
 │
 ├─ types/
@@ -170,6 +174,7 @@ src/
 │
 ├─ data/
 │  ├─ taxonomy.ts            # Libellés, couleurs et icônes de la taxonomie
+│  ├─ benchmarks.ts          # Défis chronométrés : règles, paliers, musique
 │  ├─ _helpers.ts            # `family()` : factorise les métadonnées communes
 │  └─ exercises/             # 13 fichiers thématiques + index agrégateur
 │
@@ -293,7 +298,7 @@ vercel          # déploiement de prévisualisation
 vercel --prod   # production
 ```
 
-Le build pré-rend les 472 fiches : comptez une à deux minutes.
+Le build pré-rend les 475 fiches : comptez une à deux minutes.
 
 ### Tout autre hébergeur statique
 
@@ -329,6 +334,7 @@ Le service worker n'est enregistré qu'en production, pour ne pas gêner le rech
 ## Feuille de route
 
 - [ ] Synchronisation temps réel des classements et des défis
+- [ ] Classement mondial sur les défis chronométrés
 - [ ] Recherche d'amis par pseudo sur les profils publics
 - [ ] Illustrations animées pour les mouvements les plus techniques
 - [ ] Programmes sur plusieurs semaines (push/pull/legs, full body, 5/3/1)

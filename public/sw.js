@@ -15,7 +15,7 @@
  * qui permet au même fichier de fonctionner à la racine d'un domaine comme
  * dans un sous-dossier (GitHub Pages).
  */
-const VERSION = "ironquest-v4";
+const VERSION = "ironquest-v5";
 
 /** Racine de l'application, terminée par « / ». */
 const BASE = new URL(self.registration.scope).pathname;
@@ -28,7 +28,7 @@ const at = (path) => BASE + path.replace(/^\//, "");
  * rendu serveur, « /exercices/ » en export statique. On enregistre les deux
  * formes ; celle qui n'existe pas est simplement ignorée (voir `allSettled`).
  */
-const PAGES = ["", "exercices", "seances", "progression", "outils", "profil", "social"];
+const PAGES = ["", "exercices", "seances", "defis", "progression", "outils", "profil", "social"];
 
 const PRECACHE = [
   ...PAGES.flatMap((page) => (page === "" ? [at("")] : [at(page), at(`${page}/`)])),

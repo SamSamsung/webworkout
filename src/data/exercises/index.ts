@@ -19,6 +19,7 @@ import { ABDOMINAUX } from "./abdominaux";
 import { CORPS_ENTIER } from "./corps-entier";
 import { CARDIO } from "./cardio";
 import { MOBILITE } from "./mobilite";
+import { DEFIS } from "./defis";
 
 /** Toutes les fiches, dans l'ordre de déclaration. */
 export const EXERCISES = collect(
@@ -35,6 +36,7 @@ export const EXERCISES = collect(
   CORPS_ENTIER,
   CARDIO,
   MOBILITE,
+  DEFIS,
 );
 
 /** Index par identifiant, pour un accès O(1) depuis les records et les séances. */
@@ -48,4 +50,4 @@ export function getExercise(id: string) {
 /** Toutes les familles présentes dans la base, avec leur nombre de variantes. */
 export const FAMILIES = [...new Set(EXERCISES.map((ex) => ex.family))].sort();
 
-export { POMPES, PECTORAUX, TRACTIONS, DOS, EPAULES, BRAS, SQUATS, JAMBES, FESSIERS, ABDOMINAUX, CORPS_ENTIER, CARDIO, MOBILITE };
+export { POMPES, PECTORAUX, TRACTIONS, DOS, EPAULES, BRAS, SQUATS, JAMBES, FESSIERS, ABDOMINAUX, CORPS_ENTIER, CARDIO, MOBILITE, DEFIS };

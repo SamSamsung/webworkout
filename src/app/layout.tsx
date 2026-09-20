@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Providers } from "@/components/Providers";
 import { BadgeToaster } from "@/components/BadgeToaster";
 import { asset } from "@/lib/base-path";
+import { EXERCISES } from "@/data/exercises";
 
 export const metadata: Metadata = {
   title: {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     template: "%s · IronQuest",
   },
   description:
-    "472 exercices détaillés, suivi de records, séances chronométrées, XP, badges et défis entre amis. Fonctionne hors ligne, sans compte.",
+    `${EXERCISES.length} exercices détaillés, suivi de records, séances chronométrées, XP, badges et défis entre amis. Fonctionne hors ligne, sans compte.`,
   applicationName: "IronQuest",
   keywords: ["musculation", "exercices", "fitness", "poids du corps", "street workout", "programme", "records", "XP"],
   manifest: asset("/manifest.webmanifest"),

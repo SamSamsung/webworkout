@@ -1,7 +1,7 @@
 /**
  * Recherche et filtrage de la base d'exercices.
  *
- * Tout se fait côté client : 472 fiches tiennent largement en mémoire et la
+ * Tout se fait côté client : la base tient largement en mémoire et la
  * navigation reste instantanée, sans aller-retour réseau.
  */
 import type { Category, Difficulty, Equipment, Exercise, Location, MuscleGroup } from "@/types/exercise";

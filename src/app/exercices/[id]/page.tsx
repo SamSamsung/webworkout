@@ -10,7 +10,7 @@ import { Card, Chip, DifficultyDots, SectionTitle } from "@/components/ui";
 import { MuscleMap } from "@/components/exercises/MuscleMap";
 import { ExerciseActions } from "@/components/exercises/ExerciseActions";
 
-/** Les 472 fiches sont pré-rendues : navigation instantanée et bon référencement. */
+/** Toutes les fiches sont pré-rendues : navigation instantanée et bon référencement. */
 export function generateStaticParams() {
   return EXERCISES.map((ex) => ({ id: ex.id }));
 }

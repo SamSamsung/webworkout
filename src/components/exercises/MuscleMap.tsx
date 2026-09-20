@@ -2,7 +2,7 @@
  * Carte musculaire SVG.
  *
  * Plutôt que des photos ou des GIF (lourds, difficiles à sourcer et à
- * maintenir pour 472 fiches), chaque exercice est illustré par une silhouette
+ * maintenir pour des centaines de fiches), chaque exercice est illustré par une silhouette
  * stylisée où les zones sollicitées s'allument : en plein pour les muscles
  * principaux, en teinte atténuée pour les secondaires.
  *
@@ -154,11 +154,14 @@ export function MuscleMap({
   secondary = [],
   className,
   showLabels = true,
+  size = "md",
 }: {
   primary: Muscle[];
   secondary?: Muscle[];
   className?: string;
   showLabels?: boolean;
+  /** `sm` produit une vignette, utilisable dans une liste de résultats. */
+  size?: "sm" | "md";
 }) {
   const primarySet = new Set(primary);
   const secondarySet = new Set(secondary);
@@ -173,7 +176,7 @@ export function MuscleMap({
     <figure className="flex flex-col items-center gap-1">
       <svg
         viewBox="0 0 100 185"
-        className="h-44 w-auto sm:h-52"
+        className={size === "sm" ? "h-14 w-auto" : "h-44 w-auto sm:h-52"}
         role="img"
         aria-label={`Muscles sollicités, vue ${label.toLowerCase()}`}
       >
@@ -189,7 +192,7 @@ export function MuscleMap({
 
   return (
     <div className={className}>
-      <div className="flex items-start justify-center gap-4">
+      <div className={size === "sm" ? "flex items-start justify-center gap-1" : "flex items-start justify-center gap-4"}>
         {renderView("face", "Face")}
         {renderView("dos", "Dos")}
       </div>

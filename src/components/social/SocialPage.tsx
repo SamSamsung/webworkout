@@ -284,7 +284,7 @@ export function SocialPage() {
       {tab === "defis" && (
         <div className="flex flex-col gap-3">
           <Card className="flex flex-col gap-3">
-            <SectionTitle icon="⚔️" title="Lancer un défi" subtitle="Sur n'importe lequel des 472 exercices." />
+            <SectionTitle icon="⚔️" title="Lancer un défi" subtitle={`Sur n'importe lequel des ${EXERCISES.length} exercices.`} />
             <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
               <select
                 value={challengeForm.exerciseId}

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { asset } from "@/lib/base-path";
+import { EXERCISES } from "@/data/exercises";
 
 // Le manifeste ne dépend d'aucune donnée de requête : on le fige pour qu'il
 // soit émis comme un simple fichier, y compris en export statique.
@@ -14,7 +15,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "IronQuest — la musculation qui se joue",
     short_name: "IronQuest",
     description:
-      "472 exercices détaillés, suivi de records, séances chronométrées, XP, badges et défis entre amis.",
+      `${EXERCISES.length} exercices détaillés, suivi de records, séances chronométrées, XP, badges et défis entre amis.`,
     start_url: asset("/"),
     scope: asset("/"),
     display: "standalone",
@@ -31,7 +32,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Démarrer une séance", short_name: "Séance", url: asset("/entrainement"), description: "Lancer une séance chronométrée" },
-      { name: "Base d'exercices", short_name: "Exercices", url: asset("/exercices"), description: "Parcourir les 472 fiches" },
+      { name: "Base d'exercices", short_name: "Exercices", url: asset("/exercices"), description: `Parcourir les ${EXERCISES.length} fiches` },
       { name: "Ma progression", short_name: "Progression", url: asset("/progression"), description: "Courbes et records" },
     ],
   };

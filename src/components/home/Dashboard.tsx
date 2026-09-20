@@ -218,10 +218,12 @@ export function Dashboard() {
           <SectionTitle icon="⚡" title="Accès rapide" />
           <div className="grid grid-cols-2 gap-2">
             <QuickLink href="/exercices" icon="📚" label="Base d'exercices" hint={`${EXERCISES.length} fiches`} />
+            <QuickLink href="/defis" icon="🔥" label="Défis chronométrés" hint="Bring Sally Up & co" />
             <QuickLink href="/seances" icon="🎲" label="Générer une séance" hint="En 10 secondes" />
-            <QuickLink href="/outils" icon="🧮" label="Calculateurs" hint="1RM, calories, zones" />
-            <QuickLink href="/social" icon="⚔️" label="Classements & défis" hint="Amis et duels" />
+            <QuickLink href="/entrainement" icon="▶️" label="Séance libre" hint="Sans modèle" />
             <QuickLink href="/progression" icon="📈" label="Ma progression" hint="Courbes et records" />
+            <QuickLink href="/outils" icon="🧮" label="Calculateurs" hint="1RM, calories, zones" />
+            <QuickLink href="/social" icon="⚔️" label="Classements & duels" hint="Amis et défis" />
             <QuickLink href="/profil" icon="🎖️" label="Badges" hint={`${state.badges.length} débloqué(s)`} />
           </div>
         </section>
