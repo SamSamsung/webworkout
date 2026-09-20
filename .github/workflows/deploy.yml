@@ -36,12 +36,13 @@ jobs:
       - name: Valider la base d'exercices
         run: npm run data:validate
 
+      # Prérequis, à faire une seule fois et manuellement : dans
+      # Settings → Pages → Build and deployment, choisir la source
+      # « GitHub Actions ». Le jeton d'un workflow n'a pas le droit de créer
+      # le site Pages lui-même, seulement d'y publier.
       - name: Configurer GitHub Pages
         id: pages
         uses: actions/configure-pages@v5
-        with:
-          # Active Pages sur le dépôt s'il ne l'est pas encore.
-          enablement: true
 
       - name: Build (export statique)
         env:

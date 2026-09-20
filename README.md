@@ -262,19 +262,42 @@ Pensez à **exporter votre sauvegarde** (Profil → Mes données) avant de chang
    - la vue `leaderboard`, qui n'expose jamais l'état complet d'un joueur ;
    - les politiques RLS et le trigger de création automatique du profil à l'inscription.
 3. Renseignez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Redémarrez l'application. `resolveAdapter()` bascule automatiquement sur Supabase **dès qu'une session existe** ; sans session, le mode local continue de s'appliquer.
+4. Dans **Authentication → URL Configuration**, ajoutez l'URL de votre site (et `http://localhost:3000`) aux *Redirect URLs*.
+5. Redémarrez l'application, puis allez dans **Profil → Compte & synchronisation** et saisissez votre e-mail : vous recevez un lien de connexion, sans mot de passe.
 
-> Le schéma, l'adaptateur et la bascule sont en place et testés à la compilation. L'écran de connexion (magic link ou OAuth) reste à brancher : voir la feuille de route.
+Au moment de la connexion :
+
+- si le compte est vierge, **la progression locale y est envoyée** ;
+- s'il contient déjà des données, la plus riche des deux progressions est conservée (comparaison sur le nombre de séances puis l'XP), l'autre restant récupérable via l'export JSON ;
+- si le réseau échoue, l'application **reste en mode local** et le signale : une séance n'est jamais bloquée par un problème de synchronisation.
 
 ---
 
-## Déploiement sur Vercel
+## Déploiement
 
-### En un clic
+Le site est **entièrement statique** : `npm run build:static` produit un dossier `out/` publiable sur n'importe quel hébergeur de fichiers. Aucune route ne dépend d'un serveur, toutes les données utilisateur vivent dans le navigateur.
+
+### GitHub Pages (workflow inclus)
+
+Le dépôt contient `.github/workflows/deploy.yml`, qui valide la base, construit l'export statique et publie le résultat.
+
+**Une seule action manuelle est nécessaire, et une seule fois** — le jeton d'un workflow n'a pas le droit de créer un site Pages, seulement d'y publier :
+
+1. **Settings → Pages → Build and deployment → Source : `GitHub Actions`**.
+2. Si le déploiement part d'une branche autre que la branche par défaut, autorisez-la dans **Settings → Environments → `github-pages` → Deployment branches**.
+3. Relancez le workflow (**Actions → Déploiement GitHub Pages → Run workflow**) ou poussez un commit.
+
+Le site est alors publié sur `https://<utilisateur>.github.io/<dépôt>/`. Le workflow injecte automatiquement le sous-chemin via `NEXT_PUBLIC_BASE_PATH`.
+
+Pour activer la synchronisation Supabase sur le site déployé, ajoutez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` dans **Settings → Secrets and variables → Actions**.
+
+### Vercel
+
+#### En un clic
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/SamSamsung/webworkout)
 
-### En ligne de commande
+#### En ligne de commande
 
 ```bash
 npm i -g vercel
@@ -282,14 +305,23 @@ vercel          # déploiement de prévisualisation
 vercel --prod   # déploiement en production
 ```
 
-### Depuis l'interface Vercel
+#### Depuis l'interface Vercel
 
 1. **Add New → Project**, puis importez le dépôt GitHub.
 2. Vercel détecte Next.js : laissez les réglages par défaut (`npm run build`, sortie `.next`).
 3. Ajoutez éventuellement les deux variables Supabase dans **Settings → Environment Variables**.
 4. **Deploy**.
 
-Le build pré-rend les 472 fiches : comptez une à deux minutes. Aucune configuration serveur n'est nécessaire — seule la route `/seances/[id]` est rendue à la demande, tout le reste est statique.
+Le build pré-rend les 472 fiches : comptez une à deux minutes. Aucune configuration serveur n'est nécessaire.
+
+### Tout autre hébergeur statique
+
+```bash
+npm run build:static          # produit out/
+npm run preview:static        # sert out/ en local pour vérifier
+```
+
+Déposez le contenu de `out/` sur Netlify, Cloudflare Pages, un bucket S3 ou n'importe quel serveur de fichiers. Si le site est servi depuis un sous-dossier, définissez `NEXT_PUBLIC_BASE_PATH=/le-sous-dossier` au moment du build.
 
 ---
 
@@ -306,8 +338,8 @@ Le service worker n'est enregistré qu'en production, pour ne pas gêner le rech
 
 ## Feuille de route
 
-- [ ] Écran de connexion Supabase (magic link) et bascule assistée depuis le mode local
 - [ ] Synchronisation temps réel des classements et des défis
+- [ ] Recherche d'amis par pseudo sur les profils publics
 - [ ] Illustrations animées pour les mouvements les plus techniques
 - [ ] Programmes sur plusieurs semaines (push/pull/legs, full body, 5/3/1)
 - [ ] Périodisation automatique et suggestion de charge à partir des records
