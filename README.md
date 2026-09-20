@@ -33,7 +33,7 @@
 | **Exercices** | Recherche instantanée et filtres cumulables (groupe musculaire, matériel, niveau, catégorie, lieu, favoris), 5 modes de tri |
 | **Fiche d'exercice** | Description, exécution pas à pas, erreurs fréquentes, consignes de sécurité, respiration, tempo, repos conseillé, carte musculaire, échelle de progression, variantes de la famille, record personnel |
 | **Séances** | Modèles personnalisés, générateur automatique, historique complet. Le sélecteur d'exercices y reprend toute la richesse de la base : vignette des muscles sollicités, description, technique, erreurs à éviter et lien vers la fiche complète |
-| **Défis** | Bring Sally Up (pompes, squats, tractions), gainage, suspension, chaise au mur, L-sit : chronomètre, règle du jeu, paliers bronze → légende et record personnel |
+| **Défis** | Deux formats. *Protocole configurable* : EMOM — tu choisis l'exercice, les répétitions et le nombre de tours, et tu refais ta série à chaque top ; ce qu'il te reste dans l'intervalle est ton repos. *Défis à temps* : Bring Sally Up (pompes, squats, tractions), gainage, suspension, chaise au mur, L-sit — chronomètre, règle du jeu, paliers bronze → légende et record personnel |
 | **Entraînement** | Chronomètre, validation des séries, minuteur de repos sonore, XP et volume en direct, écran de fin avec records et badges |
 | **Progression** | Courbes d'XP cumulée, volume hebdomadaire, répartition par groupe musculaire, calendrier d'assiduité, records avec courbe de progression |
 | **Social** | Classement XP, gestion des amis, défis sur n'importe quel exercice |
@@ -179,7 +179,7 @@ src/
 │  └─ exercises/             # 13 fichiers thématiques + index agrégateur
 │
 ├─ lib/                      # Logique métier pure, sans React
-│  ├─ xp.ts  calculs.ts  records.ts  badges.ts
+│  ├─ xp.ts  calculs.ts  records.ts  badges.ts  audio.ts
 │  ├─ streak.ts  quests.ts  generator.ts  search.ts
 │  └─ storage.ts  supabase.ts
 │
@@ -335,6 +335,7 @@ Le service worker n'est enregistré qu'en production, pour ne pas gêner le rech
 
 - [ ] Synchronisation temps réel des classements et des défis
 - [ ] Classement mondial sur les défis chronométrés
+- [ ] Autres protocoles configurables : AMRAP chronométré, Tabata guidé, échelle 21-15-9
 - [ ] Recherche d'amis par pseudo sur les profils publics
 - [ ] Illustrations animées pour les mouvements les plus techniques
 - [ ] Programmes sur plusieurs semaines (push/pull/legs, full body, 5/3/1)

@@ -10,32 +10,11 @@ import { estimateCalories } from "@/lib/calculs";
 import { formatDuration } from "@/lib/records";
 import { cryptoRandomId } from "@/lib/storage";
 import { setVolumeKg, setXp } from "@/lib/xp";
+import { beepRest } from "@/lib/audio";
 import { useApp } from "@/store/useApp";
 import { BADGES_BY_ID } from "@/lib/badges";
 import { Button, Card, Chip, EmptyState, ProgressBar, SectionTitle } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
-
-/** Bip de fin de repos, généré à la volée : aucun fichier audio à charger. */
-function beep() {
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.42);
-    setTimeout(() => void ctx.close(), 600);
-  } catch {
-    // L'audio peut être bloqué tant que l'utilisateur n'a pas interagi :
-    // ce n'est pas bloquant pour la séance.
-  }
-}
 
 /**
  * Lecteur de séance en direct.
@@ -81,7 +60,7 @@ export function SessionPlayer() {
     if (!rest) return;
     const id = setTimeout(() => {
       if (rest.remaining <= 1) {
-        beep();
+        beepRest();
         setRest(null);
       } else {
         setRest({ ...rest, remaining: rest.remaining - 1 });

@@ -9,6 +9,7 @@ import { formatDuration } from "@/lib/records";
 import { useApp } from "@/store/useApp";
 import { Card, Chip, cx, ProgressBar, SectionTitle } from "@/components/ui";
 import { ChallengeTimer } from "./ChallengeTimer";
+import { EmomRunner } from "./EmomRunner";
 
 /**
  * Page des défis chronométrés.
@@ -20,6 +21,7 @@ import { ChallengeTimer } from "./ChallengeTimer";
 export function ChallengesPage() {
   const records = useApp((s) => s.state.records);
   const [active, setActive] = useState<Benchmark | null>(null);
+  const [emom, setEmom] = useState(false);
 
   // Deux mesures distinctes : les défis déjà tentés, et les paliers réellement
   // décrochés. Un défi peut avoir un record sans qu'aucun palier ne soit atteint.
@@ -43,6 +45,27 @@ export function ChallengesPage() {
           </div>
         }
       />
+
+      {/* Protocole configurable : l'exercice et le volume sont au choix. */}
+      <Card className="flex flex-wrap items-center gap-3 border-neon-violet/35 bg-neon-violet/[0.05]">
+        <span aria-hidden className="text-3xl">⏱️</span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-sm font-bold">EMOM — chaque minute, une série</h3>
+          <p className="mt-0.5 text-xs leading-relaxed text-white/55">
+            Choisis un exercice et un nombre de répétitions, puis refais la série à chaque top. Tout le temps que tu ne
+            passes pas à travailler est du repos : 10 s de série sur une minute, et il te reste 50 s pour souffler.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEmom(true)}
+          className="rounded-xl bg-gradient-to-r from-neon-violet to-neon-cyan px-4 py-2 text-sm font-semibold text-ink-950 transition hover:brightness-110 active:scale-[0.97]"
+        >
+          ▶ Configurer
+        </button>
+      </Card>
+
+      <SectionTitle icon="🏅" title="Défis à temps" subtitle="Protocole fixe, un seul chrono, des paliers à décrocher." />
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {BENCHMARKS.map((benchmark) => {
@@ -122,6 +145,7 @@ export function ChallengesPage() {
       </Card>
 
       {active && <ChallengeTimer benchmark={active} onClose={() => setActive(null)} />}
+      {emom && <EmomRunner onClose={() => setEmom(false)} />}
     </div>
   );
 }

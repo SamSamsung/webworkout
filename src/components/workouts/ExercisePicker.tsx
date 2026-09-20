@@ -69,7 +69,7 @@ export function ExercisePicker({
       aria-modal="true"
       aria-label="Choisir un exercice"
     >
-      <div className="flex h-[92dvh] w-full max-w-5xl flex-col gap-3 rounded-t-2xl border border-ink-600 bg-ink-900 p-4 sm:h-[85dvh] sm:rounded-2xl">
+      <div className="flex h-dvh w-full max-w-5xl flex-col gap-2.5 bg-ink-900 p-3 sm:h-[85dvh] sm:gap-3 sm:rounded-2xl sm:border sm:border-ink-600 sm:p-4">
         {/* ------------------------------------------------------- En-tête */}
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
@@ -144,7 +144,7 @@ export function ExercisePicker({
                       aria-label={`Voir le détail de ${ex.name}`}
                       className="flex min-w-0 flex-1 items-start gap-2 text-left"
                     >
-                      <span className="hidden shrink-0 rounded-lg bg-ink-950/60 px-1 py-1 sm:block">
+                      <span className="shrink-0 rounded-lg bg-ink-950/60 px-1 py-1">
                         <MuscleMap
                           primary={ex.primaryMuscles}
                           secondary={ex.secondaryMuscles}
@@ -153,10 +153,7 @@ export function ExercisePicker({
                         />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5">
-                          <span aria-hidden className="sm:hidden">{meta.icon}</span>
-                          <span className="truncate text-sm font-semibold">{ex.name}</span>
-                        </span>
+                        <span className="block truncate text-sm font-semibold">{ex.name}</span>
                         {ex.nameEn && <span className="block truncate text-[11px] text-white/35">{ex.nameEn}</span>}
                         <span className="mt-1 flex flex-wrap items-center gap-1">
                           <Chip color={meta.hex}>{meta.label}</Chip>
@@ -170,7 +167,7 @@ export function ExercisePicker({
                           </Chip>
                           {record && <Chip color="#a3e635">🏅 record</Chip>}
                         </span>
-                        <span className="mt-1 line-clamp-2 block text-[11px] leading-relaxed text-white/45">
+                        <span className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-white/45">
                           {ex.description}
                         </span>
                       </span>
@@ -222,7 +219,7 @@ export function ExercisePicker({
       {/* Aperçu en feuille sur mobile */}
       {preview && (
         <div className="fixed inset-0 z-[70] flex items-end bg-ink-950/85 backdrop-blur-sm lg:hidden">
-          <div className="max-h-[88dvh] w-full overflow-y-auto rounded-t-2xl border border-ink-600 bg-ink-900 p-4">
+          <div className="h-dvh w-full overflow-y-auto bg-ink-900 p-4">
             <div className="mb-2 flex justify-end">
               <Button size="sm" variant="ghost" onClick={() => setPreview(null)}>
                 Fermer l&apos;aperçu
