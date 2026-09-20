@@ -1,11 +1,16 @@
-name: Déploiement GitHub Pages
+name: Déploiement GitHub Pages (optionnel)
 
-# Le site est entièrement statique : le build produit `out/`, publié tel quel.
+# Hébergement alternatif, gardé sous la main mais volontairement manuel : le
+# déploiement principal du projet passe par Vercel, qui gère lui-même les
+# builds à chaque push. Ce workflow ne se déclenche donc que sur demande
+# explicite (Actions → Run workflow), afin de ne pas faire échouer la CI tant
+# que GitHub Pages n'a pas été activé sur le dépôt.
+#
+# Prérequis avant de le lancer : Settings → Pages → Build and deployment →
+# Source = « GitHub Actions » (le jeton d'un workflow ne peut pas créer le
+# site lui-même), et, si la branche déployée n'est pas la branche par défaut,
+# l'autoriser dans Settings → Environments → github-pages.
 on:
-  push:
-    branches:
-      - main
-      - claude/fitness-app-project-zq2lp4
   workflow_dispatch:
 
 permissions:

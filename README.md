@@ -18,7 +18,7 @@
 - [Ajouter un exercice](#ajouter-un-exercice)
 - [Comment l'XP est calculée](#comment-lxp-est-calculée)
 - [Mode local ou mode Supabase](#mode-local-ou-mode-supabase)
-- [Déploiement sur Vercel](#déploiement-sur-vercel)
+- [Déploiement](#déploiement)
 - [PWA et mode hors ligne](#pwa-et-mode-hors-ligne)
 - [Feuille de route](#feuille-de-route)
 - [Avertissement](#avertissement)
@@ -98,7 +98,7 @@ Plutôt que 472 photos ou GIF à sourcer, héberger et maintenir, chaque fiche e
 | **Recharts** | Graphiques React déclaratifs, suffisants pour les courbes de progression, avec un habillage commun défini une fois. |
 | **localStorage d'abord** | L'application est utilisable **immédiatement, sans compte et sans serveur**. Les données restent sur l'appareil. |
 | **Supabase en option** | Auth, Postgres et RLS prêts à l'emploi pour le jour où l'on veut de la synchronisation multi-appareils et un vrai réseau social. Branché derrière une interface `StorageAdapter` : le reste du code ne sait pas quel stockage est actif. |
-| **Service worker écrit à la main** | Une quarantaine de lignes lisibles plutôt qu'une dépendance opaque, avec une stratégie adaptée à chaque type de ressource. |
+| **Service worker écrit à la main** | Une centaine de lignes lisibles plutôt qu'une dépendance opaque, avec une stratégie adaptée à chaque type de ressource, et une racine déduite de sa portée d'enregistrement pour fonctionner aussi en sous-dossier. |
 | **Icônes générées en Node pur** | `scripts/generate-icons.mjs` encode les PNG avec `zlib` uniquement : pas de bibliothèque d'images de plusieurs dizaines de mégaoctets pour quatre fichiers. |
 
 ---
@@ -160,7 +160,7 @@ src/
 ├─ app/                      # Routes (App Router)
 │  ├─ page.tsx               # Tableau de bord
 │  ├─ exercices/             # Liste + fiche [id] (pré-rendue)
-│  ├─ seances/               # Modèles + éditeur [id]
+│  ├─ seances/               # Modèles + éditeur (?id=…)
 │  ├─ entrainement/          # Séance en direct
 │  ├─ progression/ profil/ social/ outils/
 │  └─ hors-ligne/            # Page de repli du service worker
@@ -275,55 +275,44 @@ Au moment de la connexion :
 
 ## Déploiement
 
-Le site est **entièrement statique** : `npm run build:static` produit un dossier `out/` publiable sur n'importe quel hébergeur de fichiers. Aucune route ne dépend d'un serveur, toutes les données utilisateur vivent dans le navigateur.
+Le projet est prêt à déployer tel quel : aucune route ne dépend d'un serveur, aucune variable d'environnement n'est obligatoire.
 
-### GitHub Pages (workflow inclus)
+### Vercel (chemin principal)
 
-Le dépôt contient `.github/workflows/deploy.yml`, qui valide la base, construit l'export statique et publie le résultat.
+1. **Add New → Project**, importez le dépôt GitHub.
+2. Vercel détecte Next.js : laissez les réglages par défaut (`npm run build`, sortie `.next`). `vercel.json` est déjà fourni (en-têtes de sécurité, et surtout `Cache-Control: no-cache` sur `/sw.js`, sans quoi un ancien service worker continuerait de piloter le site après un déploiement).
+3. Vérifiez la **branche de production** dans *Settings → Git → Production Branch* : elle doit pointer sur la branche qui contient l'application.
+4. *(facultatif)* Ajoutez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` dans *Settings → Environment Variables* pour activer la synchronisation, puis déclarez l'URL du déploiement dans les *Redirect URLs* de Supabase.
 
-**Une seule action manuelle est nécessaire, et une seule fois** — le jeton d'un workflow n'a pas le droit de créer un site Pages, seulement d'y publier :
-
-1. **Settings → Pages → Build and deployment → Source : `GitHub Actions`**.
-2. Si le déploiement part d'une branche autre que la branche par défaut, autorisez-la dans **Settings → Environments → `github-pages` → Deployment branches**.
-3. Relancez le workflow (**Actions → Déploiement GitHub Pages → Run workflow**) ou poussez un commit.
-
-Le site est alors publié sur `https://<utilisateur>.github.io/<dépôt>/`. Le workflow injecte automatiquement le sous-chemin via `NEXT_PUBLIC_BASE_PATH`.
-
-Pour activer la synchronisation Supabase sur le site déployé, ajoutez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` dans **Settings → Secrets and variables → Actions**.
-
-### Vercel
-
-#### En un clic
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/SamSamsung/webworkout)
-
-#### En ligne de commande
+En ligne de commande :
 
 ```bash
 npm i -g vercel
 vercel          # déploiement de prévisualisation
-vercel --prod   # déploiement en production
+vercel --prod   # production
 ```
 
-#### Depuis l'interface Vercel
-
-1. **Add New → Project**, puis importez le dépôt GitHub.
-2. Vercel détecte Next.js : laissez les réglages par défaut (`npm run build`, sortie `.next`).
-3. Ajoutez éventuellement les deux variables Supabase dans **Settings → Environment Variables**.
-4. **Deploy**.
-
-Le build pré-rend les 472 fiches : comptez une à deux minutes. Aucune configuration serveur n'est nécessaire.
+Le build pré-rend les 472 fiches : comptez une à deux minutes.
 
 ### Tout autre hébergeur statique
+
+Le site s'exporte intégralement en fichiers :
 
 ```bash
 npm run build:static          # produit out/
 npm run preview:static        # sert out/ en local pour vérifier
 ```
 
-Déposez le contenu de `out/` sur Netlify, Cloudflare Pages, un bucket S3 ou n'importe quel serveur de fichiers. Si le site est servi depuis un sous-dossier, définissez `NEXT_PUBLIC_BASE_PATH=/le-sous-dossier` au moment du build.
+Déposez le contenu de `out/` sur Netlify, Cloudflare Pages, un bucket S3 ou n'importe quel serveur de fichiers. Si le site est servi depuis un sous-dossier, définissez `NEXT_PUBLIC_BASE_PATH=/le-sous-dossier` au moment du build : les liens, le manifeste et le service worker s'adaptent automatiquement.
 
----
+### GitHub Pages (optionnel)
+
+`.github/workflows/deploy.yml` fait le travail, mais reste **manuel** (*Actions → Run workflow*) pour ne pas encombrer la CI. Deux réglages sont à faire une fois, car le jeton d'un workflow peut publier sur Pages mais pas créer le site :
+
+1. *Settings → Pages → Build and deployment → Source :* `GitHub Actions` ;
+2. si la branche déployée n'est pas la branche par défaut, l'autoriser dans *Settings → Environments → `github-pages` → Deployment branches*.
+
+Le site est alors publié sur `https://<utilisateur>.github.io/<dépôt>/`, le sous-chemin étant injecté automatiquement.
 
 ## PWA et mode hors ligne
 
