@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { asset } from "@/lib/base-path";
 import { useApp } from "@/store/useApp";
 
 /**
@@ -19,7 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // masquerait les rechargements à chaud.
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("/sw.js").catch(() => {
+    navigator.serviceWorker.register(asset("/sw.js"), { scope: asset("/") }).catch(() => {
       // L'échec d'enregistrement ne doit jamais bloquer l'application.
     });
   }, []);

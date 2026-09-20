@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppShell } from "@/components/AppShell";
 import { Providers } from "@/components/Providers";
 import { BadgeToaster } from "@/components/BadgeToaster";
+import { asset } from "@/lib/base-path";
 
 export const metadata: Metadata = {
   title: {
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
     "472 exercices détaillés, suivi de records, séances chronométrées, XP, badges et défis entre amis. Fonctionne hors ligne, sans compte.",
   applicationName: "IronQuest",
   keywords: ["musculation", "exercices", "fitness", "poids du corps", "street workout", "programme", "records", "XP"],
-  manifest: "/manifest.webmanifest",
+  manifest: asset("/manifest.webmanifest"),
+  icons: { apple: asset("/apple-touch-icon.png") },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "IronQuest" },
   openGraph: {
     title: "IronQuest — la musculation qui se joue",

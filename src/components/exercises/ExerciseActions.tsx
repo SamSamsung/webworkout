@@ -74,7 +74,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    router.push(`/seances/${id}`);
+    router.push(`/seances/editer?id=${id}`);
   }
 
   /** Ajoute l'exercice à une séance existante. */

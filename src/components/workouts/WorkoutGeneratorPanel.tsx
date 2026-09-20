@@ -58,7 +58,7 @@ export function WorkoutGeneratorPanel() {
   function accept() {
     if (!preview) return;
     saveTemplate(preview);
-    router.push(`/seances/${preview.id}`);
+    router.push(`/seances/editer?id=${preview.id}`);
   }
 
   return (

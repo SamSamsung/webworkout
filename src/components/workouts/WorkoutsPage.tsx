@@ -30,7 +30,7 @@ export function WorkoutsPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    router.push(`/seances/${id}`);
+    router.push(`/seances/editer?id=${id}`);
   }
 
   return (
@@ -117,7 +117,7 @@ export function WorkoutsPage() {
                     <Button size="sm" href={`/entrainement?template=${t.id}`}>
                       ▶ Lancer
                     </Button>
-                    <Button size="sm" variant="ghost" href={`/seances/${t.id}`}>
+                    <Button size="sm" variant="ghost" href={`/seances/editer?id=${t.id}`}>
                       ✎ Modifier
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => deleteTemplate(t.id)}>

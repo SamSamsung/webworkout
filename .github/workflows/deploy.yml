@@ -1,0 +1,78 @@
+name: Déploiement GitHub Pages
+
+# Le site est entièrement statique : le build produit `out/`, publié tel quel.
+on:
+  push:
+    branches:
+      - main
+      - claude/fitness-app-project-zq2lp4
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un seul déploiement à la fois ; les pushes suivants remplacent celui en cours.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build statique
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Valider la base d'exercices
+        run: npm run data:validate
+
+      - name: Configurer GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          # Active Pages sur le dépôt s'il ne l'est pas encore.
+          enablement: true
+
+      - name: Build (export statique)
+        env:
+          NEXT_OUTPUT: export
+          # Le site est servi depuis https://<user>.github.io/<repo>/ :
+          # toutes les URL doivent être préfixées par le nom du dépôt.
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # Facultatifs : définis-les en secrets de dépôt pour activer la
+          # synchronisation Supabase sur le site déployé.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Désactiver le traitement Jekyll
+        # Sans ce fichier, un hébergement Pages classique ignorerait le dossier
+        # `_next` à cause de son tiret bas.
+        run: touch out/.nojekyll
+
+      - name: Téléverser l'artefact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    name: Publication
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

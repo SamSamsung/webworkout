@@ -20,7 +20,14 @@ let client: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient | null {
   if (!isSupabaseConfigured) return null;
   client ??= createClient(url!, anonKey!, {
-    auth: { persistSession: true, autoRefreshToken: true },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      // Indispensable pour les liens magiques : le jeton arrive dans le
+      // fragment de l'URL au retour de l'e-mail.
+      detectSessionInUrl: true,
+      flowType: "pkce",
+    },
   });
   return client;
 }

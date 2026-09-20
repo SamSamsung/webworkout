@@ -10,6 +10,7 @@ import { exportState } from "@/lib/storage";
 import { RANKS, totalXpForLevel } from "@/lib/xp";
 import { useApp, useLevel } from "@/store/useApp";
 import { Button, Card, Chip, cx, ProgressBar, SectionTitle, StatTile } from "@/components/ui";
+import { AccountCard } from "./AccountCard";
 
 /** Avatars proposés : des emoji, pour éviter tout téléversement de fichier. */
 const AVATARS = ["🦍", "🐺", "🦅", "🦊", "🐻", "🦁", "🐯", "🦈", "🐉", "🤖", "👹", "🥷", "🦾", "⚡", "🔥", "🗿"];
@@ -297,6 +298,11 @@ export function ProfilePage() {
         </Card>
       </section>
 
+      {/* --------------------------------------------------------- Compte */}
+      <section>
+        <AccountCard />
+      </section>
+
       {/* ---------------------------------------------------------- Données */}
       <section>
         <SectionTitle icon="💾" title="Mes données" subtitle="Elles t'appartiennent : exporte-les ou efface-les quand tu veux." />
@@ -307,8 +313,9 @@ export function ProfilePage() {
               {storage === "local" ? "navigateur (localStorage)" : "Supabase (compte synchronisé)"}
             </strong>
             .{" "}
-            {storage === "local" &&
-              "Tes données ne quittent jamais cet appareil. Pense à exporter une sauvegarde avant de changer de navigateur."}
+            {storage === "local"
+              ? "Tes données ne quittent jamais cet appareil. Pense à exporter une sauvegarde avant de changer de navigateur."
+              : "Chaque modification est enregistrée sur ton compte. L'export reste disponible pour garder une copie hors ligne."}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="soft" onClick={download}>

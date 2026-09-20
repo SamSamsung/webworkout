@@ -26,12 +26,14 @@ import { applyRecord, makeRecordEntry } from "@/lib/records";
 import { refreshQuestProgress } from "@/lib/quests";
 import {
   LocalStorageAdapter,
+  SupabaseAdapter,
   cryptoRandomId,
   defaultState,
   importState,
-  resolveAdapter,
+  pickRicher,
   type StorageAdapter,
 } from "@/lib/storage";
+import { getSession, onAuthChange, signOut, type AuthSession } from "@/lib/auth";
 import { refillFreezes, updateStreak } from "@/lib/streak";
 import { levelFromXp } from "@/lib/xp";
 
@@ -43,8 +45,18 @@ interface AppStore {
   state: AppState;
   /** Badges débloqués depuis la dernière consultation, pour l'animation. */
   pendingBadges: string[];
+  /** Session Supabase courante, `null` en mode local. */
+  session: AuthSession | null;
+  /** Vrai pendant une synchronisation avec le serveur. */
+  syncing: boolean;
+  /** Dernier message de synchronisation à afficher dans les réglages. */
+  syncMessage: string | null;
 
   hydrate: () => Promise<void>;
+  /** Applique une session (connexion, déconnexion) et bascule le stockage. */
+  applySession: (session: AuthSession | null) => Promise<void>;
+  /** Ferme la session et repasse en stockage local. */
+  disconnect: () => Promise<void>;
   /** Applique une transformation immuable puis persiste. */
   mutate: (fn: (state: AppState) => AppState) => void;
 
@@ -76,23 +88,93 @@ interface AppStore {
   reset: () => void;
 }
 
-/** Adaptateur courant ; résolu au premier chargement. */
+/** Adaptateur courant ; résolu au premier chargement puis à chaque session. */
 let adapter: StorageAdapter = new LocalStorageAdapter();
+
+/**
+ * Remet un état chargé en cohérence : jokers de série recrédités et quêtes de
+ * la semaine recalculées depuis l'historique.
+ */
+function prepare(state: AppState): AppState {
+  const withFreezes = { ...state, streak: refillFreezes(state.streak) };
+  return { ...withFreezes, quests: refreshQuestProgress(withFreezes) };
+}
 
 export const useApp = create<AppStore>((set, get) => ({
   hydrated: false,
   storage: "local",
   state: defaultState(),
   pendingBadges: [],
+  session: null,
+  syncing: false,
+  syncMessage: null,
 
   hydrate: async () => {
-    adapter = await resolveAdapter();
-    const loaded = (await adapter.load()) ?? defaultState();
-    // Les jokers de série se rechargent au fil du temps, même hors ligne.
-    const withFreezes = { ...loaded, streak: refillFreezes(loaded.streak) };
-    const withQuests = { ...withFreezes, quests: refreshQuestProgress(withFreezes) };
-    set({ state: withQuests, hydrated: true, storage: adapter.name });
-    void adapter.save(withQuests);
+    // On affiche toujours l'état local en premier : l'application est
+    // utilisable immédiatement, même si le réseau est lent ou absent.
+    adapter = new LocalStorageAdapter();
+    const local = (await adapter.load()) ?? defaultState();
+    const prepared = prepare(local);
+    set({ state: prepared, hydrated: true, storage: "local" });
+    void adapter.save(prepared);
+
+    // Puis, si un compte est connecté, on bascule sur le stockage distant.
+    const session = await getSession();
+    if (session) await get().applySession(session);
+
+    // Enfin, on suit les changements de session pour la suite de la visite
+    // (retour d'un lien magique, expiration, déconnexion sur un autre onglet).
+    onAuthChange((next) => {
+      if (next?.userId === get().session?.userId) return;
+      void get().applySession(next);
+    });
+  },
+
+  applySession: async (session) => {
+    if (!session) {
+      adapter = new LocalStorageAdapter();
+      const local = (await adapter.load()) ?? defaultState();
+      set({ session: null, storage: "local", state: prepare(local), syncMessage: "Déconnecté : retour au stockage local." });
+      return;
+    }
+
+    set({ syncing: true, syncMessage: null });
+    try {
+      const remote = new SupabaseAdapter();
+      const cloud = await remote.load();
+      const local = get().state;
+
+      // Pas encore d'état distant : on téléverse la progression locale.
+      const { state, source } = cloud ? pickRicher(local, cloud) : { state: local, source: "local" as const };
+
+      adapter = remote;
+      const prepared = prepare(state);
+      set({
+        session,
+        storage: "supabase",
+        state: prepared,
+        syncing: false,
+        syncMessage: cloud
+          ? `Connecté. Progression conservée : ${source === "distant" ? "celle de ton compte" : "celle de cet appareil"}.`
+          : "Connecté. Ta progression locale a été envoyée sur ton compte.",
+      });
+      await remote.save(prepared);
+    } catch (error) {
+      // Un échec de synchronisation ne doit jamais bloquer l'entraînement :
+      // on reste en local et on le dit clairement.
+      adapter = new LocalStorageAdapter();
+      set({
+        session,
+        storage: "local",
+        syncing: false,
+        syncMessage: `Synchronisation impossible (${error instanceof Error ? error.message : "erreur réseau"}). Tes données restent sur cet appareil.`,
+      });
+    }
+  },
+
+  disconnect: async () => {
+    await signOut();
+    await get().applySession(null);
   },
 
   mutate: (fn) => {

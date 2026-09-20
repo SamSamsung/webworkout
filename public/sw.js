@@ -4,27 +4,40 @@
  * Stratégie :
  * - navigations : réseau d'abord, repli sur le cache puis sur la page hors
  *   ligne — on veut toujours la version fraîche quand la connexion le permet ;
- * - ressources statiques (_next/static, icônes, polices) : cache d'abord,
+ * - ressources statiques (_next/static, icônes, manifeste) : cache d'abord,
  *   car elles sont versionnées par leur nom de fichier ;
  * - tout le reste : réseau, avec mise en cache opportuniste.
  *
  * Les données du joueur vivent dans le localStorage : l'application reste donc
  * pleinement utilisable hors ligne une fois les pages visitées.
+ *
+ * Le sous-dossier d'hébergement est déduit de la portée d'enregistrement, ce
+ * qui permet au même fichier de fonctionner à la racine d'un domaine comme
+ * dans un sous-dossier (GitHub Pages).
  */
-const VERSION = "ironquest-v1";
+const VERSION = "ironquest-v2";
+
+/** Racine de l'application, terminée par « / ». */
+const BASE = new URL(self.registration.scope).pathname;
+
+/** Construit une URL absolue relative à la racine de l'application. */
+const at = (path) => BASE + path.replace(/^\//, "");
+
 const PRECACHE = [
-  "/",
-  "/exercices",
-  "/seances",
-  "/progression",
-  "/outils",
-  "/profil",
-  "/social",
-  "/hors-ligne",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-];
+  "",
+  "exercices/",
+  "seances/",
+  "progression/",
+  "outils/",
+  "profil/",
+  "social/",
+  "hors-ligne/",
+  "manifest.webmanifest",
+  "icon-192.png",
+  "icon-512.png",
+].map(at);
+
+const OFFLINE_URL = at("hors-ligne/");
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -62,14 +75,14 @@ self.addEventListener("fetch", (event) => {
           void caches.open(VERSION).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached ?? caches.match("/hors-ligne"))),
+        .catch(() => caches.match(request).then((cached) => cached ?? caches.match(OFFLINE_URL))),
     );
     return;
   }
 
   // Ressources versionnées : cache d'abord.
   const isStatic =
-    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.includes("/_next/static/") ||
     url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".svg") ||
     url.pathname.endsWith(".webmanifest");
