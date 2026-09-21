@@ -98,7 +98,10 @@ export function ProfilePage() {
       {/* ---------------------------------------------------- Carte niveau */}
       <Card className="flex flex-wrap items-center gap-4 border-neon-violet/30">
         <span aria-hidden className="text-5xl">{state.profile.avatar}</span>
-        <div className="min-w-0 flex-1">
+        {/* `basis` empêche le bloc d'identité d'être écrasé par la grille de
+            statistiques sur un écran étroit : les deux se répartissent sur
+            deux lignes au lieu de se disputer la largeur. */}
+        <div className="min-w-0 flex-1 basis-56">
           <h2 className="font-display text-xl font-black">{state.profile.pseudo}</h2>
           <p className="text-sm text-white/50">
             {level.title} · Niveau {level.level}
@@ -108,7 +111,7 @@ export function ProfilePage() {
             {level.xpIntoLevel} / {level.xpForLevel} XP · {state.xp.toLocaleString("fr-FR")} XP au total
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-cols-4">
           <StatTile icon="🎽" label="Séances" value={stats.workouts} color="#22d3ee" />
           <StatTile icon="🏅" label="Records" value={stats.recordsCount} color="#a3e635" />
           <StatTile icon="🎖️" label="Badges" value={`${owned.size}/${BADGES.length}`} color="#fbbf24" />

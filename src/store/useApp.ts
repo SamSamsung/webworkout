@@ -16,6 +16,7 @@ import type {
   Friend,
   PersonalRecord,
   Profile,
+  Quest,
   RecordEntry,
   WorkoutLog,
   WorkoutTemplate,
@@ -30,11 +31,11 @@ import {
   cryptoRandomId,
   defaultState,
   importState,
-  pickRicher,
   type StorageAdapter,
 } from "@/lib/storage";
 import { getSession, onAuthChange, signOut, type AuthSession } from "@/lib/auth";
-import { refillFreezes, updateStreak } from "@/lib/streak";
+import { computeStreak } from "@/lib/streak";
+import { mergeStates } from "@/lib/merge";
 import { levelFromXp } from "@/lib/xp";
 
 interface AppStore {
@@ -95,9 +96,32 @@ let adapter: StorageAdapter = new LocalStorageAdapter();
  * Remet un état chargé en cohérence : jokers de série recrédités et quêtes de
  * la semaine recalculées depuis l'historique.
  */
+/**
+ * Recalcule les quêtes et crédite la récompense de celles qui viennent d'être
+ * terminées.
+ *
+ * Une quête terminée le reste : sans cela, supprimer une séance la ferait
+ * repasser en cours, et la terminer à nouveau reverserait l'XP une seconde
+ * fois. C'est ce verrou qui rend la récompense versable une fois et une seule.
+ */
+function settleQuests(state: AppState): { quests: Quest[]; reward: number } {
+  const wasCompleted = new Map(state.quests.map((q) => [q.id, q.completed]));
+  const quests = refreshQuestProgress(state).map((q) =>
+    wasCompleted.get(q.id) ? { ...q, completed: true } : q,
+  );
+  const reward = quests
+    .filter((q) => q.completed && !wasCompleted.get(q.id))
+    .reduce((total, q) => total + q.xpReward, 0);
+  return { quests, reward };
+}
+
 function prepare(state: AppState): AppState {
-  const withFreezes = { ...state, streak: refillFreezes(state.streak) };
-  return { ...withFreezes, quests: refreshQuestProgress(withFreezes) };
+  // La série et les quêtes sont entièrement dérivées de l'historique : on les
+  // recalcule au chargement plutôt que de faire confiance à une valeur
+  // stockée, qui peut dater d'une autre session ou d'un autre appareil.
+  const withStreak = { ...state, streak: computeStreak(state.logs) };
+  const { quests, reward } = settleQuests(withStreak);
+  return { ...withStreak, quests, xp: withStreak.xp + reward };
 }
 
 export const useApp = create<AppStore>((set, get) => ({
@@ -144,19 +168,34 @@ export const useApp = create<AppStore>((set, get) => ({
       const cloud = await remote.load();
       const local = get().state;
 
-      // Pas encore d'état distant : on téléverse la progression locale.
-      const { state, source } = cloud ? pickRicher(local, cloud) : { state: local, source: "local" as const };
+      // Sans état distant, la progression locale devient celle du compte.
+      // Sinon on fusionne : rien de ce qui a été fait sur l'un ou l'autre
+      // appareil ne doit disparaître à la connexion.
+      const merged = cloud ? mergeStates(local, cloud) : null;
+      const state = merged?.state ?? local;
 
       adapter = remote;
       const prepared = prepare(state);
+
+      const added = merged?.added;
+      const recovered = added
+        ? [
+            added.logs > 0 && `${added.logs} séance${added.logs > 1 ? "s" : ""}`,
+            added.records > 0 && `${added.records} record${added.records > 1 ? "s" : ""}`,
+            added.templates > 0 && `${added.templates} modèle${added.templates > 1 ? "s" : ""}`,
+          ].filter(Boolean)
+        : [];
+
       set({
         session,
         storage: "supabase",
         state: prepared,
         syncing: false,
-        syncMessage: cloud
-          ? `Connecté. Progression conservée : ${source === "distant" ? "celle de ton compte" : "celle de cet appareil"}.`
-          : "Connecté. Ta progression locale a été envoyée sur ton compte.",
+        syncMessage: !cloud
+          ? "Connecté. Ta progression locale a été envoyée sur ton compte."
+          : recovered.length
+            ? `Connecté. Fusion effectuée : ${recovered.join(", ")} récupéré(s) depuis tes autres appareils.`
+            : "Connecté. Tes appareils étaient déjà à jour.",
       });
       await remote.save(prepared);
     } catch (error) {
@@ -240,16 +279,21 @@ export const useApp = create<AppStore>((set, get) => ({
     }
 
     // 2. XP, historique et série.
+    // L'historique reste trié par date décroissante : une séance saisie après
+    // coup doit se ranger à sa place, pas en tête de liste.
+    const logs = [log, ...before.logs].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
     const withLog: AppState = {
       ...before,
       records,
-      logs: [log, ...before.logs],
+      logs,
       xp: before.xp + log.xp,
-      streak: updateStreak(before.streak, new Date(log.endedAt)),
+      streak: computeStreak(logs),
     };
 
-    // 3. Quêtes, puis badges (qui dépendent de tout le reste).
-    const withQuests: AppState = { ...withLog, quests: refreshQuestProgress(withLog) };
+    // 3. Quêtes — dont la récompense est versée à l'achèvement —, puis badges
+    //    (qui dépendent de tout le reste).
+    const { quests, reward } = settleQuests(withLog);
+    const withQuests: AppState = { ...withLog, quests, xp: withLog.xp + reward };
     const newBadges = findNewlyUnlocked(withQuests);
     const next: AppState = {
       ...withQuests,
@@ -268,8 +312,11 @@ export const useApp = create<AppStore>((set, get) => ({
     get().mutate((s) => {
       const logs = s.logs.filter((l) => l.id !== id);
       const removed = s.logs.find((l) => l.id === id);
-      const next = { ...s, logs, xp: Math.max(0, s.xp - (removed?.xp ?? 0)) };
-      return { ...next, quests: refreshQuestProgress(next) };
+      // Supprimer une séance peut rompre une série : on la recalcule aussi.
+      const next = { ...s, logs, xp: Math.max(0, s.xp - (removed?.xp ?? 0)), streak: computeStreak(logs) };
+      // Les quêtes déjà terminées le restent : on ne reprend pas une
+      // récompense déjà versée.
+      return { ...next, quests: settleQuests(next).quests };
     }),
 
   /** Saisie manuelle d'un record. Renvoie `true` s'il s'agit d'un nouveau record. */
@@ -375,7 +422,11 @@ export const useApp = create<AppStore>((set, get) => ({
   deleteChallenge: (id) =>
     get().mutate((s) => ({ ...s, challenges: s.challenges.filter((c) => c.id !== id) })),
 
-  refreshQuests: () => get().mutate((s) => ({ ...s, quests: refreshQuestProgress(s) })),
+  refreshQuests: () =>
+    get().mutate((s) => {
+      const { quests, reward } = settleQuests(s);
+      return { ...s, quests, xp: s.xp + reward };
+    }),
 
   /** Crédite l'XP du défi du jour, une seule fois par journée. */
   claimDailyChallenge: (xp) =>

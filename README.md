@@ -38,7 +38,7 @@
 | **Progression** | Courbes d'XP cumulée, volume hebdomadaire, répartition par groupe musculaire, calendrier d'assiduité, records avec courbe de progression |
 | **Social** | Classement XP, gestion des amis, défis sur n'importe quel exercice |
 | **Outils** | 1RM (4 formules), table de pourcentages, chargement de barre, calories par MET, zones cardiaques, IMC, besoins caloriques, minuteur de repos |
-| **Profil** | Réglages, collection de badges, échelle des rangs, export / import / effacement des données |
+| **Profil** | Réglages, collection de badges, échelle des rangs, compte et synchronisation (Google ou lien magique), export / import / effacement des données |
 
 ---
 
@@ -180,8 +180,9 @@ src/
 │
 ├─ lib/                      # Logique métier pure, sans React
 │  ├─ xp.ts  calculs.ts  records.ts  badges.ts  audio.ts
+│  ├─ merge.ts               # Fusion de deux sauvegardes à la connexion
 │  ├─ streak.ts  quests.ts  generator.ts  search.ts
-│  └─ storage.ts  supabase.ts
+│  └─ storage.ts  supabase.ts  auth.ts
 │
 ├─ store/useApp.ts           # Point d'entrée unique des mutations
 └─ components/               # UI, découpée par domaine
@@ -257,25 +258,33 @@ Tout vit dans le `localStorage` du navigateur. Aucune donnée ne quitte l'appare
 
 Pensez à **exporter votre sauvegarde** (Profil → Mes données) avant de changer de navigateur.
 
-### Mode Supabase (optionnel)
+### Mode Supabase (synchronisation multi-appareils)
 
-1. Créez un projet sur [supabase.com](https://supabase.com).
-2. Dans l'éditeur SQL, exécutez l'intégralité de `supabase/schema.sql`. Il crée :
-   - la table `profiles` (état complet en `jsonb` + colonnes indexables pour le classement) ;
-   - les tables `friendships`, `challenges` et `challenge_participants` ;
-   - la vue `leaderboard`, qui n'expose jamais l'état complet d'un joueur ;
-   - les politiques RLS et le trigger de création automatique du profil à l'inscription.
-3. Renseignez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Dans **Authentication → URL Configuration**, ajoutez l'URL de votre site (et `http://localhost:3000`) aux *Redirect URLs*.
-5. Redémarrez l'application, puis allez dans **Profil → Compte & synchronisation** et saisissez votre e-mail : vous recevez un lien de connexion, sans mot de passe.
+C'est ce qui fait qu'un téléphone et un ordinateur affichent la même progression. Sans lui, chaque navigateur a sa propre sauvegarde — ce ne sont pas deux comptes, ce sont deux appareils.
 
-Au moment de la connexion :
+**1. Créer le projet et le schéma** (≈ 3 minutes)
 
-- si le compte est vierge, **la progression locale y est envoyée** ;
-- s'il contient déjà des données, la plus riche des deux progressions est conservée (comparaison sur le nombre de séances puis l'XP), l'autre restant récupérable via l'export JSON ;
-- si le réseau échoue, l'application **reste en mode local** et le signale : une séance n'est jamais bloquée par un problème de synchronisation.
+1. Créez un projet gratuit sur [supabase.com](https://supabase.com).
+2. Dans *SQL Editor*, exécutez l'intégralité de `supabase/schema.sql`. Il crée la table `profiles` (état complet en `jsonb` + colonnes indexables pour le classement), les tables `friendships` / `challenges`, la vue `leaderboard` qui n'expose jamais l'état complet d'un joueur, les politiques RLS et le trigger de création de profil.
+3. Dans *Project Settings → API*, copiez `Project URL` et la clé `anon`, et renseignez-les en variables d'environnement (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) — en local dans `.env.local`, sur Vercel dans *Settings → Environment Variables*, puis redéployez.
+4. Dans *Authentication → URL Configuration*, renseignez *Site URL* avec l'adresse du site déployé, et ajoutez aux **Redirect URLs** `https://<votre-site>/**` ainsi que `http://localhost:3000/**` (le motif générique évite d'avoir à lister chaque page de retour).
 
----
+À ce stade, la connexion par **lien magique** fonctionne déjà : Profil → Compte & synchronisation → « Ou recevoir un lien par e-mail ».
+
+**2. Activer la connexion Google** (≈ 5 minutes de plus)
+
+1. Dans la [Google Cloud Console](https://console.cloud.google.com), créez un projet, puis *APIs & Services → Credentials → Create credentials → OAuth client ID*, type **Web application**.
+2. Dans *Authorized redirect URIs*, collez l'URI de rappel affichée par Supabase dans *Authentication → Providers → Google* (de la forme `https://<projet>.supabase.co/auth/v1/callback`).
+3. Recopiez le *Client ID* et le *Client secret* dans ce même écran Supabase, et activez le fournisseur.
+
+Le bouton « Continuer avec Google » devient alors opérationnel, sans aucune modification de code.
+
+**Ce qui se passe à la connexion**
+
+- Compte vierge → la progression de l'appareil y est envoyée.
+- Compte déjà rempli → les deux sauvegardes **fusionnent** : séances réunies (dédoublonnées par identifiant), historiques de records combinés en gardant le meilleur score, badges conservés à leur date d'obtention la plus ancienne, favoris et modèles réunis. Rien n'est écrasé, et refusionner deux fois donne le même résultat.
+- L'XP de référence est celle de l'appareil le plus fourni, augmentée de celle des séances qu'il ne connaissait pas : ni double comptage, ni perte.
+- Échec réseau → l'application **reste en mode local** et le signale. Une séance n'est jamais bloquée par un problème de synchronisation.
 
 ## Déploiement
 

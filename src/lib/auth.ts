@@ -1,10 +1,12 @@
 /**
- * Authentification Supabase par lien magique.
+ * Authentification Supabase.
  *
- * Choix du lien magique plutôt qu'un mot de passe : aucun secret à stocker ni
- * à faire tourner, pas de formulaire d'inscription, et un parcours en deux
- * clics. Sans projet Supabase configuré, toutes ces fonctions renvoient
- * proprement une erreur explicite et l'application reste en mode local.
+ * Deux parcours, aucun mot de passe à retenir ni à stocker :
+ * - Google, en un clic, pour qui a déjà un compte Google sur ses appareils ;
+ * - lien magique par e-mail, en repli universel.
+ *
+ * Sans projet Supabase configuré, toutes ces fonctions renvoient proprement
+ * une erreur explicite et l'application reste en mode local.
  */
 import { BASE_PATH } from "./base-path";
 import { getSupabase, isSupabaseConfigured } from "./supabase";
@@ -44,6 +46,26 @@ export async function sendMagicLink(email: string): Promise<{ ok: boolean; messa
     ok: true,
     message: `Lien envoyé à ${email.trim()}. Ouvre-le depuis cet appareil pour te connecter.`,
   };
+}
+
+/**
+ * Lance la connexion Google.
+ *
+ * La page est redirigée vers Google puis revient avec un code d'autorisation
+ * que le client Supabase échange contre une session (flux PKCE). Il n'y a donc
+ * rien à faire au retour : `onAuthChange` se déclenche tout seul.
+ */
+export async function signInWithGoogle(): Promise<{ ok: boolean; message: string }> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { ok: false, message: "Aucun projet Supabase n'est configuré sur cette instance." };
+  }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: redirectUrl() },
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: "Redirection vers Google…" };
 }
 
 /** Ferme la session ; l'application repasse automatiquement en mode local. */

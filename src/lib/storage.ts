@@ -194,24 +194,6 @@ export async function resolveAdapter(): Promise<StorageAdapter> {
   return new LocalStorageAdapter();
 }
 
-/**
- * Choisit l'état à conserver lorsqu'un compte distant et une sauvegarde locale
- * coexistent (première connexion sur un nouvel appareil, par exemple).
- *
- * Règle : on garde le plus riche des deux, mesuré au nombre de séances puis à
- * l'XP. C'est la seule politique automatique qui ne fasse jamais perdre de
- * travail réel ; l'autre sauvegarde reste récupérable par l'export JSON.
- */
-export function pickRicher(
-  local: AppState,
-  remote: AppState,
-): { state: AppState; source: "local" | "distant" } {
-  const score = (s: AppState) => s.logs.length * 1_000_000 + s.xp;
-  return score(remote) >= score(local)
-    ? { state: remote, source: "distant" }
-    : { state: local, source: "local" };
-}
-
 /** Export JSON de la sauvegarde, pour que le joueur reste maître de ses données. */
 export function exportState(state: AppState): string {
   return JSON.stringify(state, null, 2);

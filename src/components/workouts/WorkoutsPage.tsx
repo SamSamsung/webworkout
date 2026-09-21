@@ -39,7 +39,14 @@ export function WorkoutsPage() {
         icon="🎯"
         title="Mes séances"
         subtitle="Compose tes entraînements, lance-les au chronomètre et retrouve ton historique."
-        action={<Button onClick={createEmpty}>＋ Créer</Button>}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="ghost" href="/seances/saisie">
+              🗓️ Séance passée
+            </Button>
+            <Button onClick={createEmpty}>＋ Créer</Button>
+          </div>
+        }
       />
 
       <div className="flex gap-1 rounded-xl border border-ink-700 bg-ink-900/50 p-1">
@@ -135,7 +142,8 @@ export function WorkoutsPage() {
           <EmptyState
             icon="📜"
             title="Pas encore de séance terminée"
-            description="Ton historique apparaîtra ici, avec le volume, l'XP et les calories de chaque entraînement."
+            description="Ton historique apparaîtra ici. Tu peux aussi y ajouter des séances que tu as déjà faites, avec leur date."
+            action={<Button href="/seances/saisie">🗓️ Enregistrer une séance passée</Button>}
           />
         ) : (
           <ul className="flex flex-col gap-2">
@@ -161,12 +169,21 @@ export function WorkoutsPage() {
                   )}
                   <Chip className="text-white/55">🔥 {log.calories} kcal</Chip>
                 </div>
-                <Link
-                  href={`/progression#seance-${log.id}`}
-                  className="text-xs font-semibold text-neon-cyan hover:underline"
-                >
-                  Détail
-                </Link>
+                <div className="flex shrink-0 gap-3">
+                  <Link
+                    href={`/seances/saisie?from=${log.id}`}
+                    className="text-xs font-semibold text-white/45 hover:text-white"
+                    title="Réenregistrer cette séance à une autre date"
+                  >
+                    Dupliquer
+                  </Link>
+                  <Link
+                    href={`/progression#seance-${log.id}`}
+                    className="text-xs font-semibold text-neon-cyan hover:underline"
+                  >
+                    Détail
+                  </Link>
+                </div>
               </Card>
             ))}
           </ul>

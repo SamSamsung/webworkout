@@ -23,32 +23,54 @@ export function daysBetween(a: string, b: string): number {
   return Math.round((db - da) / 86_400_000);
 }
 
-/** Met à jour la série après une séance terminée. */
-export function updateStreak(streak: StreakState, workoutDate = new Date()): StreakState {
-  const today = dayKey(workoutDate);
-  if (streak.lastTrainingDay === today) return streak; // déjà compté aujourd'hui
+/** Nombre de jours d'inactivité qui redonne un joker. */
+const FREEZE_RECHARGE_DAYS = 7;
+/** Plafond de jokers accumulables. */
+const MAX_FREEZES = 3;
 
-  const gap = streak.lastTrainingDay ? daysBetween(streak.lastTrainingDay, today) : Infinity;
+/**
+ * Recalcule entièrement la série à partir de l'historique.
+ *
+ * C'est une fonction *dérivée* et non incrémentale, et c'est délibéré :
+ * l'utilisateur peut saisir une séance passée, en corriger la date ou en
+ * supprimer une. Une série mise à jour pas à pas se désynchroniserait au
+ * premier de ces cas ; recalculée depuis les journaux, elle reste toujours
+ * juste, quel que soit l'ordre dans lequel les séances ont été saisies.
+ *
+ * Règles :
+ * - deux jours consécutifs prolongent la série ;
+ * - un seul jour manqué est pardonné si un joker est disponible ;
+ * - un joker est regagné par tranche de sept jours écoulés, plafonné à trois.
+ */
+export function computeStreak(logs: WorkoutLog[], now: Date = new Date()): StreakState {
+  const days = [...new Set(logs.map((log) => dayKey(log.startedAt)))].sort();
+  if (!days.length) return { current: 0, best: 0, freezesLeft: 1 };
 
-  let current: number;
-  let freezesLeft = streak.freezesLeft;
+  let current = 1;
+  let best = 1;
+  let freezes = 1;
 
-  if (gap === 1) {
-    current = streak.current + 1;
-  } else if (gap === 2 && freezesLeft > 0) {
-    // Un seul jour manqué : on consomme un joker et la série se poursuit.
-    current = streak.current + 1;
-    freezesLeft -= 1;
-  } else {
-    current = 1;
+  for (let i = 1; i < days.length; i++) {
+    const gap = daysBetween(days[i - 1], days[i]);
+    // Le temps écoulé recharge les jokers, y compris pendant une interruption.
+    freezes = Math.min(MAX_FREEZES, freezes + Math.floor(gap / FREEZE_RECHARGE_DAYS));
+
+    if (gap === 1) {
+      current += 1;
+    } else if (gap === 2 && freezes > 0) {
+      current += 1;
+      freezes -= 1;
+    } else {
+      current = 1;
+    }
+    best = Math.max(best, current);
   }
 
-  return {
-    current,
-    best: Math.max(streak.best, current),
-    lastTrainingDay: today,
-    freezesLeft,
-  };
+  // Jokers regagnés depuis la dernière séance, pour l'affichage du jour.
+  const sinceLast = Math.max(0, daysBetween(days[days.length - 1], dayKey(now)));
+  freezes = Math.min(MAX_FREEZES, freezes + Math.floor(sinceLast / FREEZE_RECHARGE_DAYS));
+
+  return { current, best, lastTrainingDay: days[days.length - 1], freezesLeft: freezes };
 }
 
 /**
@@ -59,14 +81,6 @@ export function isStreakAlive(streak: StreakState, now = new Date()): boolean {
   if (!streak.lastTrainingDay) return false;
   const gap = daysBetween(streak.lastTrainingDay, dayKey(now));
   return gap <= 1 || (gap === 2 && streak.freezesLeft > 0);
-}
-
-/** Recrédite un joker par semaine entamée depuis la dernière séance, plafonné à 3. */
-export function refillFreezes(streak: StreakState, now = new Date()): StreakState {
-  if (!streak.lastTrainingDay) return streak;
-  const weeks = Math.floor(daysBetween(streak.lastTrainingDay, dayKey(now)) / 7);
-  if (weeks <= 0) return streak;
-  return { ...streak, freezesLeft: Math.min(3, streak.freezesLeft + weeks) };
 }
 
 /** Ensemble des jours entraînés, pour le calendrier d'assiduité. */
