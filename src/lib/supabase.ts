@@ -8,6 +8,17 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+/**
+ * URL et clé publique du projet, exportées telles quelles.
+ *
+ * Elles servent au diagnostic de la page profil, qui interroge directement
+ * l'API d'authentification pour savoir ce qui est réellement activé côté
+ * Supabase (voir `lib/auth.ts`). Les deux sont publiques par construction :
+ * elles sont de toute façon embarquées dans le bundle du navigateur.
+ */
+export const SUPABASE_URL = url ?? "";
+export const SUPABASE_ANON_KEY = anonKey ?? "";
+
 /** `true` si un backend Supabase est configuré pour cette instance. */
 export const isSupabaseConfigured = Boolean(url && anonKey);
 

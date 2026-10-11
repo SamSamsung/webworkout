@@ -269,7 +269,7 @@ C'est ce qui fait qu'un téléphone et un ordinateur affichent la même progress
 3. Dans *Project Settings → API*, copiez `Project URL` et la clé `anon`, et renseignez-les en variables d'environnement (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) — en local dans `.env.local`, sur Vercel dans *Settings → Environment Variables*, puis redéployez.
 4. Dans *Authentication → URL Configuration*, renseignez *Site URL* avec l'adresse du site déployé, et ajoutez aux **Redirect URLs** `https://<votre-site>/**` ainsi que `http://localhost:3000/**` (le motif générique évite d'avoir à lister chaque page de retour).
 
-À ce stade, la connexion par **lien magique** fonctionne déjà : Profil → Compte & synchronisation → « Ou recevoir un lien par e-mail ».
+À ce stade, la connexion par **lien magique** fonctionne déjà, sans rien d'autre à activer : Profil → *Compte & synchronisation* → champ e-mail → « Recevoir mon lien ». Le fournisseur *Email* est actif par défaut sur un projet neuf.
 
 **2. Activer la connexion Google** (≈ 5 minutes de plus)
 
@@ -277,7 +277,24 @@ C'est ce qui fait qu'un téléphone et un ordinateur affichent la même progress
 2. Dans *Authorized redirect URIs*, collez l'URI de rappel affichée par Supabase dans *Authentication → Providers → Google* (de la forme `https://<projet>.supabase.co/auth/v1/callback`).
 3. Recopiez le *Client ID* et le *Client secret* dans ce même écran Supabase, et activez le fournisseur.
 
-Le bouton « Continuer avec Google » devient alors opérationnel, sans aucune modification de code.
+Le bouton « Continuer avec Google » n'apparaît que lorsque le fournisseur est effectivement activé : la carte interroge `/auth/v1/settings` au chargement et n'affiche que les modes de connexion qui peuvent aboutir. Aucune modification de code n'est nécessaire.
+
+> Si l'écran de consentement Google est en mode *Testing*, seuls les comptes listés dans *Audience → Test users* peuvent se connecter ; les autres reçoivent une erreur `access_denied`.
+
+**3. En cas de problème**
+
+Ouvrez Profil → *Compte & synchronisation* → **Diagnostic de la connexion** : le bloc indique l'URL du projet vue par le navigateur, la longueur de la clé publique, la joignabilité de l'API, les fournisseurs réellement actifs, et l'adresse exacte à autoriser dans Supabase. C'est le premier endroit à regarder, car les variables `NEXT_PUBLIC_` sont **figées au moment du build** : les ajouter sur Vercel sans redéployer ne change rien au site en ligne.
+
+| Symptôme | Cause | Correctif |
+| --- | --- | --- |
+| Le bandeau jaune « Il n'y a pas encore de compte sur ce site » persiste | Les variables d'environnement ne sont pas dans le bundle | Vérifiez les deux variables pour *Production*, *Preview* et *Development*, puis **redéployez** (*Deployments → ⋯ → Redeploy*) |
+| HTTP 400 `provider is not enabled` au clic sur Google | Fournisseur Google non activé côté Supabase | Faites l'étape 2, ou utilisez le lien par e-mail |
+| HTTP 400 `Signups not allowed for otp` | Inscriptions désactivées | *Authentication → Sign In / Providers → Email* → « Allow new users to sign up » |
+| HTTP 401 `Invalid API key` | Clé `anon` tronquée ou confondue avec une autre | Recopiez la clé *anon* / *publishable* (jamais la `service_role`), puis redéployez |
+| Le lien de l'e-mail ramène sur la page d'accueil, non connecté | L'adresse de retour n'est pas autorisée | Ajoutez `https://<votre-site>/**` dans *Redirect URLs* |
+| `Error sending magic link email` | Quota du serveur d'envoi intégré (quelques messages par heure) | Attendez, ou configurez un SMTP dans *Authentication → Emails* |
+
+Tous ces messages sont traduits en consignes explicites dans l'interface (`src/lib/auth.ts`, `describeAuthError`) : le texte affiché sous le bouton nomme le réglage à changer.
 
 **Ce qui se passe à la connexion**
 
