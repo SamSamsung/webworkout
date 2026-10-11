@@ -186,7 +186,7 @@ export function AccountCard() {
             <p className="text-xs leading-relaxed text-white/40">
               La connexion Google n&apos;est pas activée sur ce projet Supabase — c&apos;est facultatif, le lien par
               e-mail suffit. Pour l&apos;ajouter : Supabase → Authentication → Sign In / Providers → Google, avec un
-              identifiant client Google (README, section « Connexion Google »).
+              identifiant client Google (README, section « Activer la connexion Google »).
             </p>
           )}
 

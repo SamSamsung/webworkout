@@ -38,7 +38,7 @@ export function describeAuthError(raw: string): string {
       "La connexion Google n'est pas encore activée côté Supabase. " +
       "Deux options : utiliser le lien par e-mail juste en dessous (ça marche tout de suite), " +
       "ou activer le fournisseur dans Supabase → Authentication → Sign In / Providers → Google " +
-      "(il faut un identifiant client Google, voir le README, section « Connexion Google »)."
+      "(il faut un identifiant client Google, voir le README, section « Activer la connexion Google »)."
     );
   }
   if (m.includes("invalid api key") || m.includes("no api key")) {

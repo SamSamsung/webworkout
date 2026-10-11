@@ -271,15 +271,23 @@ C'est ce qui fait qu'un téléphone et un ordinateur affichent la même progress
 
 À ce stade, la connexion par **lien magique** fonctionne déjà, sans rien d'autre à activer : Profil → *Compte & synchronisation* → champ e-mail → « Recevoir mon lien ». Le fournisseur *Email* est actif par défaut sur un projet neuf.
 
-**2. Activer la connexion Google** (≈ 5 minutes de plus)
+**2. Activer la connexion Google** (≈ 10 minutes de plus)
 
-1. Dans la [Google Cloud Console](https://console.cloud.google.com), créez un projet, puis *APIs & Services → Credentials → Create credentials → OAuth client ID*, type **Web application**.
-2. Dans *Authorized redirect URIs*, collez l'URI de rappel affichée par Supabase dans *Authentication → Providers → Google* (de la forme `https://<projet>.supabase.co/auth/v1/callback`).
-3. Recopiez le *Client ID* et le *Client secret* dans ce même écran Supabase, et activez le fournisseur.
+Google veut savoir *qui* demande l'accès (l'écran de consentement) et *vers où* renvoyer l'utilisateur (l'URI de rappel de Supabase). D'où l'aller-retour entre les deux tableaux de bord.
 
-Le bouton « Continuer avec Google » n'apparaît que lorsque le fournisseur est effectivement activé : la carte interroge `/auth/v1/settings` au chargement et n'affiche que les modes de connexion qui peuvent aboutir. Aucune modification de code n'est nécessaire.
+1. **Relevez l'URI de rappel.** Supabase → *Authentication → Sign In / Providers → Google* : dépliez la ligne, le champ *Callback URL (for OAuth)* vaut `https://<ref-du-projet>.supabase.co/auth/v1/callback`. Gardez l'onglet ouvert.
+2. **Créez un projet Google Cloud** sur [console.cloud.google.com](https://console.cloud.google.com) (le sélecteur de projet est en haut à gauche). Aucune facturation n'est requise.
+3. **Configurez l'écran de consentement** — les réglages ont déménagé sous *Google Auth Platform* : [console.cloud.google.com/auth/overview](https://console.cloud.google.com/auth/overview) → *Get started*. Nom de l'app, e-mail d'assistance, *Audience* = **External**, e-mail de contact.
+4. **Créez le client OAuth** : [console.cloud.google.com/auth/clients](https://console.cloud.google.com/auth/clients) → *Create client* → *Application type* = **Web application**.
+   - *Authorized JavaScript origins* : `https://<votre-site>.vercel.app` (et `http://localhost:3000` pour le développement).
+   - *Authorized redirect URIs* : l'URI de rappel du point 1, **collée à l'identique**. Pas de joker, pas de barre oblique finale en trop : le moindre écart donne `redirect_uri_mismatch`.
+   - Validez, puis copiez le *Client ID* et le *Client secret*.
+5. **Autorisez votre compte** : *Google Auth Platform → Audience*. Tant que l'app est en mode **Testing**, seules les adresses listées dans *Test users* peuvent se connecter — ajoutez la vôtre. *Publish app* lève la restriction ; avec les seules permissions `email` et `profile`, aucune vérification Google n'est nécessaire.
+6. **Collez les deux valeurs dans Supabase** (l'onglet du point 1), activez *Enable Sign in with Google*, puis *Save*.
 
-> Si l'écran de consentement Google est en mode *Testing*, seuls les comptes listés dans *Audience → Test users* peuvent se connecter ; les autres reçoivent une erreur `access_denied`.
+Rechargez la page Profil : **le bouton apparaît tout seul**, sans redéploiement. La carte interroge `/auth/v1/settings` à chaque chargement, donc l'activation est prise en compte immédiatement — contrairement aux variables `NEXT_PUBLIC_`, qui sont figées au build.
+
+Connectez-vous avec **la même adresse** que celle du lien magique : Supabase rattache au même compte les identités qui partagent une adresse e-mail vérifiée.
 
 **3. En cas de problème**
 
@@ -293,6 +301,8 @@ Ouvrez Profil → *Compte & synchronisation* → **Diagnostic de la connexion** 
 | HTTP 401 `Invalid API key` | Clé `anon` tronquée ou confondue avec une autre | Recopiez la clé *anon* / *publishable* (jamais la `service_role`), puis redéployez |
 | Le lien de l'e-mail ramène sur la page d'accueil, non connecté | L'adresse de retour n'est pas autorisée | Ajoutez `https://<votre-site>/**` dans *Redirect URLs* |
 | `Error sending magic link email` | Quota du serveur d'envoi intégré (quelques messages par heure) | Attendez, ou configurez un SMTP dans *Authentication → Emails* |
+| `redirect_uri_mismatch` chez Google | L'URI de rappel du client OAuth ne correspond pas à celle de Supabase | Recollez `https://<ref>.supabase.co/auth/v1/callback` à l'identique (comptez jusqu'à quelques heures de propagation côté Google) |
+| `access_denied` chez Google | Écran de consentement en mode *Testing* | Ajoutez votre adresse dans *Google Auth Platform → Audience → Test users*, ou publiez l'app |
 
 Tous ces messages sont traduits en consignes explicites dans l'interface (`src/lib/auth.ts`, `describeAuthError`) : le texte affiché sous le bouton nomme le réglage à changer.
 
