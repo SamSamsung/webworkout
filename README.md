@@ -247,7 +247,7 @@ XP d'une série = base(métrique) × xpFactor(exercice) × multiplicateur(diffic
 | Distance | `mètres / 50` |
 | Calories machine | `calories × 1,5` |
 
-Un **format** — EMOM, Tabata, AMRAP — ne décrit pas un mouvement mais une façon d'organiser le temps : il se complète de l'exercice réalisé à chaque tour, du nombre de répétitions et du nombre de tours (`targetExerciseId`, `repsPerRound`, `rounds`). L'XP reste calculée sur la durée du format, pour ne pas compter deux fois le travail de l'exercice choisi. Le repérage se fait par le tag `format` : ajouter un protocole à la base suffit, sans toucher au code.
+Un **format** — EMOM, Tabata, AMRAP — ne décrit pas un mouvement mais une façon d'organiser le temps : il se complète de l'exercice réalisé à chaque tour, du nombre de répétitions et du nombre de tours (`targetExerciseId`, `repsPerRound`, `rounds`). L'XP reste calculée sur la durée du format, pour ne pas compter deux fois le travail de l'exercice choisi. Les records d'un format retiennent la même information : « 20 min · 5 × Burpee » plutôt qu'un « 20 min » qui ne situerait rien. Le repérage se fait par le tag `format` : ajouter un protocole à la base suffit, sans toucher au code.
 
 Sur une machine à console (vélo, rameur, tapis, elliptique, assault bike), la saisie accepte **durée, distance, calories et niveau de résistance à la fois** — ce qu'affiche l'écran. Hors machine, elle reste minimale : une course se note en distance et en temps, un EMOM ou une corde à sauter en durée seule. Seule la métrique de l'exercice entre dans le calcul : remplir trois cases pour un même effort ne le compte pas trois fois. Si cette métrique est laissée vide, la première valeur renseignée sert de repli (durée, puis distance, puis calories).
 

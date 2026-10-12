@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import type { Exercise } from "@/types/exercise";
 import { METRIC_META } from "@/data/taxonomy";
 import { formatRecord, progressionPercent } from "@/lib/records";
-import { FIELD_META, allFields, defaultSet, type SetField } from "@/lib/sets";
+import { FIELD_META, allFields, defaultSet, isProtocol, type SetField } from "@/lib/sets";
 import { estimateOneRmConsensus } from "@/lib/calculs";
 import { cryptoRandomId } from "@/lib/storage";
 import { useApp } from "@/store/useApp";
 import { Button, Card, Chip, ProgressBar, SectionTitle } from "@/components/ui";
+import { ExercisePicker } from "@/components/workouts/ExercisePicker";
+import { EXERCISES_BY_ID } from "@/data/exercises";
 
 /**
  * Panneau d'actions d'une fiche : record personnel, saisie d'une nouvelle
@@ -35,6 +37,17 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
   const fields = useMemo(() => allFields(exercise).filter((f) => f !== "level"), [exercise]);
   const [form, setForm] = useState<Partial<Record<SetField, string>>>({});
 
+  /**
+   * Un format (EMOM, Tabata, AMRAP) ne se classe pas sur sa seule durée :
+   * « 20 minutes d'EMOM » ne dit pas si c'était 3 burpees ou 8 tractions par
+   * tour. Le record retient donc aussi l'exercice réalisé.
+   */
+  const protocol = isProtocol(exercise);
+  const [target, setTarget] = useState<string | undefined>(undefined);
+  const [repsPerRound, setRepsPerRound] = useState("");
+  const [pickingTarget, setPickingTarget] = useState(false);
+  const targetExercise = target ? EXERCISES_BY_ID.get(target) : undefined;
+
   const metric = METRIC_META[exercise.metric];
   const isFavorite = favorites.includes(exercise.id);
 
@@ -47,6 +60,8 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
       seconds: num(form.seconds),
       meters: num(form.meters),
       calories: num(form.calories),
+      targetExerciseId: protocol ? target : undefined,
+      repsPerRound: protocol ? num(repsPerRound) : undefined,
     };
     const hasValue = Object.values(values).some((v) => typeof v === "number" && v > 0);
     if (!hasValue) {
@@ -56,6 +71,8 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
     const isNewBest = addRecord(exercise.id, values);
     setFeedback(isNewBest ? "🏆 Nouveau record personnel !" : "Performance enregistrée dans l'historique.");
     setForm({});
+    setRepsPerRound("");
+    setTarget(undefined);
     setOpen(false);
   }
 
@@ -156,7 +173,42 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
               ),
             )}
           </div>
-          {fields.length > 1 && (
+          {protocol && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-ink-600 bg-ink-900/60 px-2.5 py-2">
+              <button
+                type="button"
+                onClick={() => setPickingTarget(true)}
+                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
+                  targetExercise
+                    ? "border-neon-cyan/40 bg-neon-cyan/10 text-white"
+                    : "border-dashed border-ink-500 text-white/45 hover:border-neon-cyan hover:text-white"
+                }`}
+              >
+                {targetExercise ? targetExercise.name : "＋ Exercice du protocole"}
+              </button>
+              <label className="flex items-center gap-1 text-[11px] text-white/40">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={repsPerRound}
+                  placeholder="—"
+                  aria-label="Répétitions par tour"
+                  onChange={(e) => setRepsPerRound(e.target.value)}
+                  className="w-14 rounded border border-ink-600 bg-ink-900 px-1.5 py-1 text-center text-sm tabular-nums outline-none focus:border-neon-violet"
+                />
+                reps/tour
+              </label>
+            </div>
+          )}
+          {protocol && (
+            <p className="text-[11px] leading-relaxed text-white/35">
+              Le classement se fait sur {labelFor(fields[0], exercise.metric).toLowerCase()} : deux protocoles
+              d&apos;exercices différents ne se comparent pas vraiment, mais l&apos;exercice et les répétitions par
+              tour restent affichés avec la performance.
+            </p>
+          )}
+          {!protocol && fields.length > 1 && (
             <p className="text-[11px] leading-relaxed text-white/35">
               Remplis ce que tu as sous les yeux : seul {labelFor(fields[0], exercise.metric).toLowerCase()} sert à
               classer le record, le reste enrichit l&apos;historique.
@@ -201,6 +253,16 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
           ))}
         </div>
       </div>
+
+      {pickingTarget && (
+        <ExercisePicker
+          onClose={() => setPickingTarget(false)}
+          onPick={(picked) => {
+            setTarget(picked.id);
+            setPickingTarget(false);
+          }}
+        />
+      )}
 
       {record && record.history.length > 1 && (
         <div className="border-t border-ink-700 pt-3">

@@ -274,6 +274,8 @@ export const useApp = create<AppStore>((set, get) => ({
             seconds: s.seconds,
             meters: s.meters,
             calories: s.calories,
+            targetExerciseId: entry.targetExerciseId,
+            repsPerRound: entry.repsPerRound,
             fromWorkoutId: log.id,
           },
           log.endedAt,

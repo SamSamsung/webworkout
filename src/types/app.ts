@@ -105,6 +105,13 @@ export interface RecordEntry {
   seconds?: number;
   meters?: number;
   calories?: number;
+  /**
+   * Pour un format (EMOM, Tabata, AMRAP) : l'exercice réalisé et les
+   * répétitions par tour. Sans eux, « 20 minutes d'EMOM » ne veut rien dire
+   * et deux performances ne sont pas comparables.
+   */
+  targetExerciseId?: string;
+  repsPerRound?: number;
   /** Score normalisé servant à comparer deux performances entre elles. */
   score: number;
   /** Renseigné quand l'entrée provient d'une séance et non d'une saisie manuelle. */

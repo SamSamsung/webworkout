@@ -7,6 +7,7 @@
  */
 import type { Exercise } from "@/types/exercise";
 import type { PersonalRecord, RecordEntry } from "@/types/app";
+import { EXERCISES_BY_ID } from "@/data/exercises";
 import { estimateOneRmConsensus } from "./calculs";
 
 /**
@@ -40,7 +41,10 @@ export function scoreRecord(exercise: Exercise, entry: Omit<RecordEntry, "score"
 /** Construit une entrée de record complète (score + date). */
 export function makeRecordEntry(
   exercise: Exercise,
-  values: Pick<RecordEntry, "reps" | "weight" | "seconds" | "meters" | "calories" | "fromWorkoutId">,
+  values: Pick<
+    RecordEntry,
+    "reps" | "weight" | "seconds" | "meters" | "calories" | "targetExerciseId" | "repsPerRound" | "fromWorkoutId"
+  >,
   date = new Date().toISOString(),
 ): RecordEntry {
   return { ...values, date, score: scoreRecord(exercise, values) };
@@ -75,6 +79,11 @@ export function applyRecord(
 
 /** Formate une performance pour l'affichage, selon la métrique de l'exercice. */
 export function formatRecord(exercise: Exercise, entry: RecordEntry): string {
+  return [formatMetric(exercise, entry), formatProtocol(entry)].filter(Boolean).join(" · ");
+}
+
+/** Valeur brute de la métrique. */
+function formatMetric(exercise: Exercise, entry: RecordEntry): string {
   switch (exercise.metric) {
     case "poids-reps":
       return `${entry.weight ?? 0} kg × ${entry.reps ?? 0}`;
@@ -91,6 +100,17 @@ export function formatRecord(exercise: Exercise, entry: RecordEntry): string {
         ? `${((entry.meters ?? 0) / 1000).toFixed(2)} km`
         : `${entry.meters ?? 0} m`;
   }
+}
+
+/**
+ * Contexte d'un format : « 8 × Traction en pronation ».
+ * Piloté par la présence des données, et non par le type d'exercice, pour que
+ * ce module reste indépendant de `lib/sets.ts` — qui, lui, en dépend.
+ */
+function formatProtocol(entry: RecordEntry): string {
+  const target = entry.targetExerciseId ? EXERCISES_BY_ID.get(entry.targetExerciseId) : undefined;
+  if (!target) return entry.repsPerRound ? `${entry.repsPerRound} reps/tour` : "";
+  return entry.repsPerRound ? `${entry.repsPerRound} × ${target.name}` : target.name;
 }
 
 /** Formate une durée en `1 h 05 min`, `12 min 30 s` ou `45 s`. */
