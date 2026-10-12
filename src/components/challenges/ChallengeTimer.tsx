@@ -11,6 +11,7 @@ import { cryptoRandomId } from "@/lib/storage";
 import { setXp } from "@/lib/xp";
 import { useApp } from "@/store/useApp";
 import { Button, Card, Chip, cx, ProgressBar, SectionTitle } from "@/components/ui";
+import { Overlay } from "@/components/ui/Overlay";
 
 /** Formate un chrono en mm:ss. */
 function clock(seconds: number): string {
@@ -93,12 +94,7 @@ export function ChallengeTimer({ benchmark, onClose }: { benchmark: Benchmark; o
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink-950/85 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={benchmark.name}
-    >
+    <Overlay label={benchmark.name}>
       <div className="flex max-h-[92dvh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-t-2xl border border-ink-600 bg-ink-900 p-4 sm:rounded-2xl">
         <div className="flex items-start gap-2">
           <span aria-hidden className="text-2xl">{benchmark.icon}</span>
@@ -201,6 +197,6 @@ export function ChallengeTimer({ benchmark, onClose }: { benchmark: Benchmark; o
           </ol>
         </Card>
       </div>
-    </div>
+    </Overlay>
   );
 }

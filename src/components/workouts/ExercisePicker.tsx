@@ -10,6 +10,7 @@ import { formatDuration } from "@/lib/records";
 import { useApp } from "@/store/useApp";
 import { Button, Chip, cx, DifficultyDots } from "@/components/ui";
 import { MuscleMap } from "@/components/exercises/MuscleMap";
+import { Overlay } from "@/components/ui/Overlay";
 
 const PAGE_SIZE = 30;
 
@@ -63,12 +64,7 @@ export function ExercisePicker({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink-950/85 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Choisir un exercice"
-    >
+    <Overlay label="Choisir un exercice">
       <div className="flex h-dvh w-full max-w-5xl flex-col gap-2.5 bg-ink-900 p-3 sm:h-[85dvh] sm:gap-3 sm:rounded-2xl sm:border sm:border-ink-600 sm:p-4">
         {/* ------------------------------------------------------- En-tête */}
         <div className="flex items-center gap-2">
@@ -229,7 +225,7 @@ export function ExercisePicker({
           </div>
         </div>
       )}
-    </div>
+    </Overlay>
   );
 }
 

@@ -13,6 +13,7 @@ import { setVolumeKg, setXp } from "@/lib/xp";
 import { useApp } from "@/store/useApp";
 import { Button, Card, Chip, cx, ProgressBar, SectionTitle } from "@/components/ui";
 import { ExercisePicker } from "@/components/workouts/ExercisePicker";
+import { Overlay } from "@/components/ui/Overlay";
 
 /** Intervalles proposés : la minute est le standard, les autres sont des variantes courantes. */
 const INTERVALS = [
@@ -169,12 +170,7 @@ export function EmomRunner({ onClose }: { onClose: () => void }) {
     : null;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink-950/85 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Protocole EMOM"
-    >
+    <Overlay label="Protocole EMOM">
       <div className="flex h-dvh w-full max-w-lg flex-col gap-3 overflow-y-auto bg-ink-900 p-4 sm:h-auto sm:max-h-[92dvh] sm:rounded-2xl sm:border sm:border-ink-600">
         <div className="flex items-start gap-2">
           <span aria-hidden className="text-2xl">⏱️</span>
@@ -415,7 +411,7 @@ export function EmomRunner({ onClose }: { onClose: () => void }) {
           }}
         />
       )}
-    </div>
+    </Overlay>
   );
 }
 
