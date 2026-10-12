@@ -11,7 +11,7 @@
  * calculés sur un seul champ (voir `lib/xp.ts`), sinon remplir trois cases
  * pour un même effort le compterait trois fois.
  */
-import type { Exercise } from "@/types/exercise";
+import type { Equipment, Exercise } from "@/types/exercise";
 import type { WorkoutSet } from "@/types/app";
 import { formatDuration } from "./records";
 
@@ -44,20 +44,44 @@ export function primaryField(exercise: Exercise): SetField {
 }
 
 /**
+ * Matériel qui affiche un écran de bord.
+ *
+ * C'est lui, et non la catégorie « cardio », qui justifie les champs annexes :
+ * un vélo donne distance, calories et résistance, un EMOM au poids du corps
+ * ne donne rien de tout cela et n'a donc pas à proposer ces cases.
+ */
+const CARDIO_MACHINES = new Set<Equipment>([
+  "velo",
+  "rameur",
+  "tapis-de-course",
+  "ski-erg",
+  "assault-bike",
+  "machine",
+]);
+
+/** `true` si l'exercice se pratique sur une machine à console. */
+export function usesCardioMachine(exercise: Exercise): boolean {
+  return exercise.category === "cardio" && exercise.equipment.some((e) => CARDIO_MACHINES.has(e));
+}
+
+/**
  * Champs affichés pour un exercice, dans l'ordre de saisie.
  *
- * Hors cardio, on s'en tient au strict nécessaire : ajouter « distance » sous
- * un développé couché n'aide personne. Le cardio, lui, se pratique sur des
- * machines qui affichent tout à la fois, et c'est exactement ce que
- * l'utilisateur a sous les yeux au moment de saisir.
+ * Le principe : ne proposer que ce que l'utilisateur a réellement sous les
+ * yeux. Une machine affiche tout à la fois ; une course se mesure en distance
+ * et en temps ; un format au poids du corps se note d'une seule valeur.
  */
 export function setFields(exercise: Exercise): { primary: SetField; extra: SetField[] } {
   const primary = primaryField(exercise);
 
-  if (exercise.category === "cardio") {
+  if (usesCardioMachine(exercise)) {
     const extra = (["seconds", "meters", "calories", "level"] as const).filter((f) => f !== primary);
     return { primary, extra };
   }
+
+  // Une distance parcourue a toujours un chrono : « 5 km en 27 min ». En
+  // revanche, ni calories ni niveau de résistance hors machine.
+  if (exercise.metric === "distance") return { primary, extra: ["seconds"] };
 
   const weighted = exercise.metric === "poids-reps" || exercise.metric === "reps-lestees";
   return { primary, extra: weighted ? ["weight"] : [] };

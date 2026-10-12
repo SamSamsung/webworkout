@@ -247,7 +247,7 @@ XP d'une série = base(métrique) × xpFactor(exercice) × multiplicateur(diffic
 | Distance | `mètres / 50` |
 | Calories machine | `calories × 1,5` |
 
-Sur un exercice de cardio, la saisie accepte **durée, distance, calories et niveau de résistance à la fois** — ce qu'affiche l'écran d'une machine. Seule la métrique de l'exercice entre dans le calcul : remplir trois cases pour un même effort ne le compte pas trois fois. Si cette métrique est laissée vide, la première valeur renseignée sert de repli (durée, puis distance, puis calories).
+Sur une machine à console (vélo, rameur, tapis, elliptique, assault bike), la saisie accepte **durée, distance, calories et niveau de résistance à la fois** — ce qu'affiche l'écran. Hors machine, elle reste minimale : une course se note en distance et en temps, un EMOM ou une corde à sauter en durée seule. Seule la métrique de l'exercice entre dans le calcul : remplir trois cases pour un même effort ne le compte pas trois fois. Si cette métrique est laissée vide, la première valeur renseignée sert de repli (durée, puis distance, puis calories).
 
 Multiplicateur de difficulté : ×1 (niv. 1-2), ×1,15 (3), ×1,35 (4), ×1,6 (5). Un mouvement unilatéral vaut ×1,7, puisqu'il se réalise des deux côtés.
 
