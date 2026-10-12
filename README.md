@@ -247,7 +247,15 @@ XP d'une série = base(métrique) × xpFactor(exercice) × multiplicateur(diffic
 | Distance | `mètres / 50` |
 | Calories machine | `calories × 1,5` |
 
-Un **format** — EMOM, Tabata, AMRAP — ne décrit pas un mouvement mais une façon d'organiser le temps : il se complète de l'exercice réalisé à chaque tour, du nombre de répétitions et du nombre de tours (`targetExerciseId`, `repsPerRound`, `rounds`). L'XP reste calculée sur la durée du format, pour ne pas compter deux fois le travail de l'exercice choisi. Les records d'un format retiennent la même information : « 20 min · 5 × Burpee » plutôt qu'un « 20 min » qui ne situerait rien. Le repérage se fait par le tag `format` : ajouter un protocole à la base suffit, sans toucher au code.
+Un **format** — EMOM, Tabata, AMRAP — ne décrit pas un mouvement mais une façon d'organiser le temps : il se complète de l'exercice réalisé à chaque tour, du nombre de répétitions et du nombre de tours (`targetExerciseId`, `repsPerRound`, `rounds`). L'XP reste calculée sur la durée du format, pour ne pas compter deux fois le travail de l'exercice choisi. Les records d'un format, eux, se classent sur le **travail total** — répétitions par tour × tours — et non sur la durée seule :
+
+| Performance | Score | Progression ? |
+| --- | ---: | --- |
+| 10 min à 4 tractions/min | 40 | référence |
+| 10 min à 5 tractions/min | 50 | oui |
+| 11 min à 4 tractions/min | 44 | oui, moindre |
+
+C'est l'ordre dans lequel on ressent le progrès. Sans précision, un tour par minute est supposé — la définition de l'EMOM. Le score est recalculé à la comparaison, de sorte qu'une performance enregistrée sous un barème antérieur ne reste pas imbattable. Le repérage se fait par le tag `format` : ajouter un protocole à la base suffit, sans toucher au code.
 
 Sur une machine à console (vélo, rameur, tapis, elliptique, assault bike), la saisie accepte **durée, distance, calories et niveau de résistance à la fois** — ce qu'affiche l'écran. Hors machine, elle reste minimale : une course se note en distance et en temps, un EMOM ou une corde à sauter en durée seule. Seule la métrique de l'exercice entre dans le calcul : remplir trois cases pour un même effort ne le compte pas trois fois. Si cette métrique est laissée vide, la première valeur renseignée sert de repli (durée, puis distance, puis calories).
 

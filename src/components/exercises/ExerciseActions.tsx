@@ -45,6 +45,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
   const protocol = isProtocol(exercise);
   const [target, setTarget] = useState<string | undefined>(undefined);
   const [repsPerRound, setRepsPerRound] = useState("");
+  const [rounds, setRounds] = useState("");
   const [pickingTarget, setPickingTarget] = useState(false);
   const targetExercise = target ? EXERCISES_BY_ID.get(target) : undefined;
 
@@ -52,6 +53,22 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
   const isFavorite = favorites.includes(exercise.id);
 
   const trend = useMemo(() => (record ? progressionPercent(record) : null), [record]);
+
+  /**
+   * Ouvre le formulaire pré-rempli avec le protocole de la dernière
+   * performance : on refait rarement un EMOM sur un autre exercice, et
+   * ressaisir le mouvement à chaque fois conduisait à l'oublier — le record
+   * s'affichait alors « 5 × reps », sans dire de quoi.
+   */
+  function openForm() {
+    const last = record?.history.at(-1);
+    if (protocol && last) {
+      setTarget(last.targetExerciseId);
+      setRepsPerRound(last.repsPerRound ? String(last.repsPerRound) : "");
+      setRounds(last.rounds ? String(last.rounds) : "");
+    }
+    setOpen(true);
+  }
 
   function submit() {
     const values = {
@@ -62,6 +79,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
       calories: num(form.calories),
       targetExerciseId: protocol ? target : undefined,
       repsPerRound: protocol ? num(repsPerRound) : undefined,
+      rounds: protocol ? num(rounds) : undefined,
     };
     const hasValue = Object.values(values).some((v) => typeof v === "number" && v > 0);
     if (!hasValue) {
@@ -71,8 +89,6 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
     const isNewBest = addRecord(exercise.id, values);
     setFeedback(isNewBest ? "🏆 Nouveau record personnel !" : "Performance enregistrée dans l'historique.");
     setForm({});
-    setRepsPerRound("");
-    setTarget(undefined);
     setOpen(false);
   }
 
@@ -199,13 +215,26 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
                 />
                 reps/tour
               </label>
+              <label className="flex items-center gap-1 text-[11px] text-white/40">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={rounds}
+                  placeholder="—"
+                  aria-label="Nombre de tours"
+                  onChange={(e) => setRounds(e.target.value)}
+                  className="w-14 rounded border border-ink-600 bg-ink-900 px-1.5 py-1 text-center text-sm tabular-nums outline-none focus:border-neon-violet"
+                />
+                tours
+              </label>
             </div>
           )}
           {protocol && (
             <p className="text-[11px] leading-relaxed text-white/35">
-              Le classement se fait sur {labelFor(fields[0], exercise.metric).toLowerCase()} : deux protocoles
-              d&apos;exercices différents ne se comparent pas vraiment, mais l&apos;exercice et les répétitions par
-              tour restent affichés avec la performance.
+              Le classement se fait sur le <strong className="text-white/60">travail total</strong>, répétitions par
+              tour × tours : 5 tractions par minute pendant 10 minutes passe devant 4 par minute, et 11 minutes à 4
+              passent devant 10 minutes à 4. Sans précision, un tour par minute est supposé.
             </p>
           )}
           {!protocol && fields.length > 1 && (
@@ -225,7 +254,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => setOpen(true)}>
+          <Button size="sm" onClick={openForm}>
             ➕ Noter une performance
           </Button>
           <Button size="sm" variant="ghost" onClick={() => toggleFavorite(exercise.id)}>

@@ -112,6 +112,8 @@ export interface RecordEntry {
    */
   targetExerciseId?: string;
   repsPerRound?: number;
+  /** Tours réalisés ; à défaut, un tour par minute est supposé. */
+  rounds?: number;
   /** Score normalisé servant à comparer deux performances entre elles. */
   score: number;
   /** Renseigné quand l'entrée provient d'une séance et non d'une saisie manuelle. */

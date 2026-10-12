@@ -9,6 +9,10 @@ import type { Exercise } from "@/types/exercise";
 import type { PersonalRecord, RecordEntry } from "@/types/app";
 import { EXERCISES_BY_ID } from "@/data/exercises";
 import { estimateOneRmConsensus } from "./calculs";
+import { formatDuration, isProtocol, protocolScore } from "./sets";
+
+// Réexporté pour les nombreux écrans qui l'importaient déjà d'ici.
+export { formatDuration };
 
 /**
  * Score normalisé d'une performance : plus il est élevé, meilleure elle est.
@@ -16,6 +20,12 @@ import { estimateOneRmConsensus } from "./calculs";
  * d'un même exercice, ce qui est le seul usage.
  */
 export function scoreRecord(exercise: Exercise, entry: Omit<RecordEntry, "score" | "date">): number {
+  // Un format se juge au travail accompli, pas à sa seule durée : voir
+  // `protocolScore`. La règle vaut pour toutes ses performances, y compris
+  // celles enregistrées avant l'ajout des répétitions par tour, pour que les
+  // anciennes et les nouvelles restent sur la même échelle.
+  if (isProtocol(exercise)) return protocolScore(entry);
+
   switch (exercise.metric) {
     case "poids-reps":
       // 1RM estimé : permet de comparer des séries de longueurs différentes.
@@ -43,7 +53,15 @@ export function makeRecordEntry(
   exercise: Exercise,
   values: Pick<
     RecordEntry,
-    "reps" | "weight" | "seconds" | "meters" | "calories" | "targetExerciseId" | "repsPerRound" | "fromWorkoutId"
+    | "reps"
+    | "weight"
+    | "seconds"
+    | "meters"
+    | "calories"
+    | "targetExerciseId"
+    | "repsPerRound"
+    | "rounds"
+    | "fromWorkoutId"
   >,
   date = new Date().toISOString(),
 ): RecordEntry {
@@ -65,7 +83,10 @@ export function applyRecord(
       isNewBest: true,
     };
   }
-  const isNewBest = entry.score > existing.best.score;
+  // Le score du meilleur est recalculé plutôt que relu : une performance
+  // enregistrée sous une version antérieure du barème se comparerait sinon
+  // sur une autre échelle, et resterait imbattable.
+  const isNewBest = entry.score > scoreRecord(exercise, existing.best);
   return {
     record: {
       ...existing,
@@ -109,19 +130,14 @@ function formatMetric(exercise: Exercise, entry: RecordEntry): string {
  */
 function formatProtocol(entry: RecordEntry): string {
   const target = entry.targetExerciseId ? EXERCISES_BY_ID.get(entry.targetExerciseId) : undefined;
-  if (!target) return entry.repsPerRound ? `${entry.repsPerRound} reps/tour` : "";
-  return entry.repsPerRound ? `${entry.repsPerRound} × ${target.name}` : target.name;
-}
-
-/** Formate une durée en `1 h 05 min`, `12 min 30 s` ou `45 s`. */
-export function formatDuration(totalSeconds: number): string {
-  const s = Math.max(0, Math.round(totalSeconds));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h} h ${String(m).padStart(2, "0")} min`;
-  if (m > 0) return sec > 0 ? `${m} min ${String(sec).padStart(2, "0")} s` : `${m} min`;
-  return `${sec} s`;
+  if (!entry.repsPerRound && !target) return "";
+  const movement = entry.repsPerRound
+    ? `${entry.repsPerRound} × ${target ? target.name : "reps"}`
+    : (target?.name ?? "");
+  // Les tours ne sont affichés que s'ils ont été saisis : pour un EMOM, la
+  // durée les donne déjà (un tour par minute), et le répéter alourdit la ligne.
+  if (!entry.rounds) return movement;
+  return `${movement} · ${entry.rounds} tour${entry.rounds > 1 ? "s" : ""}`;
 }
 
 /** Progression en pourcentage entre la première et la dernière performance. */

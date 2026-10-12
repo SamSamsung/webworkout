@@ -14,7 +14,6 @@
 import type { Equipment, Exercise } from "@/types/exercise";
 import type { WorkoutExercise, WorkoutSet } from "@/types/app";
 import { EXERCISES_BY_ID } from "@/data/exercises";
-import { formatDuration } from "./records";
 
 export type SetField = "reps" | "weight" | "seconds" | "meters" | "calories" | "level";
 
@@ -113,6 +112,17 @@ export function defaultSet(exercise: Exercise): WorkoutSet {
   }
 }
 
+/** Formate une durée en `1 h 05 min`, `12 min 30 s` ou `45 s`. */
+export function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h} h ${String(m).padStart(2, "0")} min`;
+  if (m > 0) return sec > 0 ? `${m} min ${String(sec).padStart(2, "0")} s` : `${m} min`;
+  return `${sec} s`;
+}
+
 /** « 12,4 km » au-delà du kilomètre, « 800 m » en deçà. */
 export function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(2).replace(/[.,]?0+$/, "").replace(".", ",")} km` : `${meters} m`;
@@ -164,4 +174,32 @@ export function describeEntry(exercise: Exercise, entry: WorkoutExercise): strin
       : `${entry.sets.length} séries`;
   const protocol = isProtocol(exercise) ? describeProtocol(entry) : "";
   return [base, protocol].filter(Boolean).join(" · ");
+}
+
+/**
+ * Nombre de tours d'un format.
+ *
+ * À défaut d'indication explicite, on suppose un tour par minute : c'est la
+ * définition même de l'EMOM, de loin le format le plus utilisé. Un protocole
+ * à cadence différente (Tabata, AMRAP) gagne donc à renseigner ses tours.
+ */
+export function roundsOf(entry: { rounds?: number; seconds?: number }): number {
+  if (entry.rounds) return entry.rounds;
+  if (entry.seconds) return Math.max(1, Math.round(entry.seconds / 60));
+  return 1;
+}
+
+/**
+ * Score d'une performance sur un format : le **travail total**, soit les
+ * répétitions par tour multipliées par le nombre de tours.
+ *
+ * C'est la seule formule qui classe les progrès dans l'ordre où on les
+ * ressent : passer de 4 à 5 tractions par minute sur dix minutes (40 → 50)
+ * compte davantage que tenir une minute de plus au même rythme (40 → 44),
+ * et les deux comptent comme une progression. Une durée seule, sans
+ * répétitions, vaut un « travail » d'un point par tour : conservateur, mais
+ * cohérent avec le reste de l'échelle.
+ */
+export function protocolScore(entry: { repsPerRound?: number; rounds?: number; seconds?: number }): number {
+  return Math.round((entry.repsPerRound ?? 1) * roundsOf(entry) * 100) / 100;
 }
