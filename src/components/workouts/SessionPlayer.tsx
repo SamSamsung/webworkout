@@ -10,11 +10,13 @@ import { estimateCalories } from "@/lib/calculs";
 import { formatDuration } from "@/lib/records";
 import { cryptoRandomId } from "@/lib/storage";
 import { setVolumeKg, setXp } from "@/lib/xp";
+import { defaultSet } from "@/lib/sets";
 import { beepRest } from "@/lib/audio";
 import { useApp } from "@/store/useApp";
 import { BADGES_BY_ID } from "@/lib/badges";
 import { Button, Card, Chip, EmptyState, ProgressBar, SectionTitle } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
+import { SetFieldInputs } from "./SetFields";
 
 /**
  * Lecteur de séance en direct.
@@ -98,6 +100,12 @@ export function SessionPlayer() {
     [entries, bodyweight],
   );
 
+  const updateExercise = useCallback(
+    (exIndex: number, patch: Partial<WorkoutExercise>) =>
+      setEntries((prev) => prev.map((e, i) => (i === exIndex ? { ...e, ...patch } : e))),
+    [],
+  );
+
   const updateSet = useCallback(
     (exIndex: number, setIndex: number, patch: Partial<WorkoutSet>) =>
       setEntries((prev) =>
@@ -121,14 +129,31 @@ export function SessionPlayer() {
   /** Clôt la séance : calcule le journal puis le transmet au store. */
   function finish() {
     const endedAt = new Date().toISOString();
-    const durationSeconds = Math.max(1, Math.floor((Date.now() - startMs) / 1000));
+    // Une séance ne peut pas durer moins que les efforts qu'elle contient :
+    // saisir « 30 min de vélo » puis clore aussitôt doit donner 30 minutes,
+    // pas la poignée de secondes passées devant l'écran.
+    const wallClock = Math.floor((Date.now() - startMs) / 1000);
+    const loggedSeconds = entries.reduce(
+      (total, entry) => total + entry.sets.filter((s) => s.done).reduce((sum, set) => sum + (set.seconds ?? 0), 0),
+      0,
+    );
+    const durationSeconds = Math.max(1, wallClock, loggedSeconds);
 
     const calories = Math.round(
       entries.reduce((total, entry) => {
         const ex = EXERCISES_BY_ID.get(entry.exerciseId);
         if (!ex) return total;
-        const share = totalSets > 0 ? entry.sets.filter((s) => s.done).length / totalSets : 0;
-        return total + estimateCalories(ex.met ?? 5, bodyweight, durationSeconds * share);
+        const done = entry.sets.filter((s) => s.done);
+
+        // Le compteur de la machine l'emporte sur toute estimation.
+        const machine = done.reduce((sum, set) => sum + (set.calories ?? 0), 0);
+        if (machine > 0) return total + machine;
+
+        // À défaut, la durée saisie est plus juste que la part de séance :
+        // trente minutes de vélo ne se déduisent pas d'un nombre de séries.
+        const logged = done.reduce((sum, set) => sum + (set.seconds ?? 0), 0);
+        const seconds = logged > 0 ? logged : durationSeconds * (totalSets > 0 ? done.length / totalSets : 0);
+        return total + estimateCalories(ex.met ?? 5, bodyweight, seconds);
       }, 0),
     );
 
@@ -175,9 +200,7 @@ export function SessionPlayer() {
                     {
                       exerciseId: ex.id,
                       restSeconds: Math.round((ex.restSeconds[0] + ex.restSeconds[1]) / 2),
-                      sets: Array.from({ length: 3 }, () =>
-                        ex.metric === "temps" ? { seconds: 30 } : { reps: ex.repRange?.[0] ?? 10 },
-                      ),
+                      sets: Array.from({ length: ex.category === "cardio" ? 1 : 3 }, () => defaultSet(ex)),
                     },
                   ]);
                   setPicking(false);
@@ -275,35 +298,12 @@ export function SessionPlayer() {
                   >
                     <span className="w-6 shrink-0 text-[11px] font-bold text-white/35">{setIndex + 1}</span>
 
-                    {ex.metric === "temps" ? (
-                      <LiveField
-                        suffix="s"
-                        value={set.seconds ?? 0}
-                        onChange={(v) => updateSet(exIndex, setIndex, { seconds: v })}
-                      />
-                    ) : ex.metric === "distance" ? (
-                      <LiveField
-                        suffix="m"
-                        value={set.meters ?? 0}
-                        onChange={(v) => updateSet(exIndex, setIndex, { meters: v })}
-                      />
-                    ) : (
-                      <>
-                        <LiveField
-                          suffix="reps"
-                          value={set.reps ?? 0}
-                          onChange={(v) => updateSet(exIndex, setIndex, { reps: v })}
-                        />
-                        {(ex.metric === "poids-reps" || ex.metric === "reps-lestees") && (
-                          <LiveField
-                            suffix="kg"
-                            step={0.5}
-                            value={set.weight ?? 0}
-                            onChange={(v) => updateSet(exIndex, setIndex, { weight: v })}
-                          />
-                        )}
-                      </>
-                    )}
+                    <SetFieldInputs
+                      exercise={ex}
+                      set={set}
+                      tone="live"
+                      onChange={(patch) => updateSet(exIndex, setIndex, patch)}
+                    />
 
                     <span className="ml-auto text-[11px] tabular-nums text-white/35">
                       +{setXp(ex, set, bodyweight)} XP
@@ -325,6 +325,15 @@ export function SessionPlayer() {
                   </div>
                 ))}
               </div>
+
+              <input
+                type="text"
+                value={entry.notes ?? ""}
+                onChange={(e) => updateExercise(exIndex, { notes: e.target.value || undefined })}
+                placeholder="Note : programme, résistance, sensations…"
+                aria-label={`Note pour ${ex.name}`}
+                className="mt-1.5 w-full rounded-lg border border-ink-700 bg-ink-900/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-white/25 focus:border-neon-violet"
+              />
 
               <div className="mt-2 flex gap-2">
                 <Button
@@ -373,9 +382,7 @@ export function SessionPlayer() {
               {
                 exerciseId: ex.id,
                 restSeconds: Math.round((ex.restSeconds[0] + ex.restSeconds[1]) / 2),
-                sets: Array.from({ length: 3 }, () =>
-                  ex.metric === "temps" ? { seconds: 30 } : { reps: ex.repRange?.[0] ?? 10 },
-                ),
+                sets: Array.from({ length: ex.category === "cardio" ? 1 : 3 }, () => defaultSet(ex)),
               },
             ]);
             setPicking(false);
@@ -394,33 +401,6 @@ function Metric({ label, value, color }: { label: string; value: string; color: 
         {value}
       </div>
     </div>
-  );
-}
-
-function LiveField({
-  value,
-  onChange,
-  suffix,
-  step = 1,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  suffix: string;
-  step?: number;
-}) {
-  return (
-    <label className="flex items-center gap-1 text-[11px] text-white/40">
-      <input
-        type="number"
-        inputMode="decimal"
-        min={0}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-14 rounded border border-ink-600 bg-ink-950 px-1 py-1 text-center text-sm tabular-nums outline-none focus:border-neon-violet"
-      />
-      {suffix}
-    </label>
   );
 }
 

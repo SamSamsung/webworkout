@@ -25,43 +25,57 @@ const DIFFICULTY_MULTIPLIER = [1, 1, 1.15, 1.35, 1.6, 1.9] as const;
 export function setXp(exercise: Exercise, set: WorkoutSet, bodyweightKg = 75): number {
   const diff = DIFFICULTY_MULTIPLIER[exercise.difficulty] ?? 1;
   const factor = exercise.xpFactor * diff;
-  let base = 0;
 
-  switch (exercise.metric) {
-    case "poids-reps": {
-      const volume = (set.weight ?? 0) * (set.reps ?? 0);
-      base = volume / 10;
-      break;
-    }
-    case "reps-lestees": {
-      // Le poids du corps compte pour une fraction de la charge déplacée :
-      // on utilise 35 % pour éviter que 10 pompes ne valent 10 squats lourds.
-      const effective = bodyweightKg * 0.35 + (set.weight ?? 0);
-      base = (effective * (set.reps ?? 0)) / 22;
-      break;
-    }
-    case "reps": {
-      base = (set.reps ?? 0) * 1.2;
-      break;
-    }
-    case "temps": {
-      base = (set.seconds ?? 0) / 5;
-      break;
-    }
-    case "distance": {
-      base = (set.meters ?? 0) / 50;
-      break;
-    }
-    case "calories": {
-      base = (set.reps ?? 0) * 1.5;
-      break;
-    }
-  }
+  // L'XP se calcule sur la métrique de l'exercice. Les champs annexes d'une
+  // machine (distance, calories, niveau) sont descriptifs : les additionner
+  // compterait le même effort plusieurs fois. Ils ne servent de base que si
+  // la métrique principale n'a pas été renseignée.
+  let base = metricBase(exercise, set, bodyweightKg);
+  if (base === 0) base = fallbackBase(set);
 
   // Un mouvement unilatéral est réalisé des deux côtés : le travail est double.
   if (exercise.unilateral) base *= 1.7;
 
   return Math.round(base * factor);
+}
+
+/** Travail brut selon la métrique de l'exercice, avant facteurs. */
+function metricBase(exercise: Exercise, set: WorkoutSet, bodyweightKg: number): number {
+  switch (exercise.metric) {
+    case "poids-reps":
+      return ((set.weight ?? 0) * (set.reps ?? 0)) / 10;
+    case "reps-lestees":
+      // Le poids du corps compte pour une fraction de la charge déplacée :
+      // on utilise 35 % pour éviter que 10 pompes ne valent 10 squats lourds.
+      return ((bodyweightKg * 0.35 + (set.weight ?? 0)) * (set.reps ?? 0)) / 22;
+    case "reps":
+      return (set.reps ?? 0) * 1.2;
+    case "temps":
+      return (set.seconds ?? 0) / 5;
+    case "distance":
+      return (set.meters ?? 0) / 50;
+    case "calories":
+      // `reps` en repli : les séances enregistrées avant l'ajout du champ
+      // dédié stockaient les calories machine à cet endroit.
+      return (set.calories ?? set.reps ?? 0) * 1.5;
+  }
+}
+
+/**
+ * Repli quand la métrique principale est vide : une séance de vélo saisie en
+ * distance seule, ou en calories seules, doit quand même rapporter de l'XP.
+ * L'ordre suit la fiabilité de la mesure.
+ */
+function fallbackBase(set: WorkoutSet): number {
+  if (set.seconds) return set.seconds / 5;
+  if (set.meters) return set.meters / 50;
+  // Barème volontairement plus bas que celui de la métrique « calories » :
+  // là, il s'agit des « cal » d'un assault bike, une unité de travail aux
+  // valeurs modestes ; ici, des kcal affichées par un tapis, bien plus
+  // nombreuses pour le même effort.
+  if (set.calories) return set.calories / 1.5;
+  if (set.reps) return set.reps * 1.2;
+  return 0;
 }
 
 /** XP cumulée d'un exercice complet (toutes séries validées). */

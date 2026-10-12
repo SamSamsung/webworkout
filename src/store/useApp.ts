@@ -268,7 +268,14 @@ export const useApp = create<AppStore>((set, get) => ({
       const candidates = doneSets.map((s) =>
         makeRecordEntry(
           exercise,
-          { reps: s.reps, weight: s.weight, seconds: s.seconds, meters: s.meters, fromWorkoutId: log.id },
+          {
+            reps: s.reps,
+            weight: s.weight,
+            seconds: s.seconds,
+            meters: s.meters,
+            calories: s.calories,
+            fromWorkoutId: log.id,
+          },
           log.endedAt,
         ),
       );

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Exercise } from "@/types/exercise";
 import { METRIC_META } from "@/data/taxonomy";
 import { formatRecord, progressionPercent } from "@/lib/records";
+import { FIELD_META, allFields, defaultSet, type SetField } from "@/lib/sets";
 import { estimateOneRmConsensus } from "@/lib/calculs";
 import { cryptoRandomId } from "@/lib/storage";
 import { useApp } from "@/store/useApp";
@@ -26,7 +27,13 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
 
   const [open, setOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [form, setForm] = useState({ reps: "", weight: "", seconds: "", meters: "" });
+  /**
+   * Les champs proposés suivent l'exercice : un vélo accepte durée, distance
+   * et calories, pas seulement « répétitions ». `level` est exclu — un niveau
+   * de résistance décrit la performance, il ne la classe pas.
+   */
+  const fields = useMemo(() => allFields(exercise).filter((f) => f !== "level"), [exercise]);
+  const [form, setForm] = useState<Partial<Record<SetField, string>>>({});
 
   const metric = METRIC_META[exercise.metric];
   const isFavorite = favorites.includes(exercise.id);
@@ -35,10 +42,11 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
 
   function submit() {
     const values = {
-      reps: form.reps ? Number(form.reps) : undefined,
-      weight: form.weight ? Number(form.weight) : undefined,
-      seconds: form.seconds ? Number(form.seconds) : undefined,
-      meters: form.meters ? Number(form.meters) : undefined,
+      reps: num(form.reps),
+      weight: num(form.weight),
+      seconds: num(form.seconds),
+      meters: num(form.meters),
+      calories: num(form.calories),
     };
     const hasValue = Object.values(values).some((v) => typeof v === "number" && v > 0);
     if (!hasValue) {
@@ -47,7 +55,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
     }
     const isNewBest = addRecord(exercise.id, values);
     setFeedback(isNewBest ? "🏆 Nouveau record personnel !" : "Performance enregistrée dans l'historique.");
-    setForm({ reps: "", weight: "", seconds: "", meters: "" });
+    setForm({});
     setOpen(false);
   }
 
@@ -62,13 +70,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
         {
           exerciseId: exercise.id,
           restSeconds: Math.round((exercise.restSeconds[0] + exercise.restSeconds[1]) / 2),
-          sets: Array.from({ length: 4 }, () =>
-            exercise.metric === "temps"
-              ? { seconds: exercise.repRange?.[0] ?? 30 }
-              : exercise.metric === "distance"
-                ? { meters: exercise.repRange?.[0] ?? 200 }
-                : { reps: exercise.repRange?.[0] ?? 10 },
-          ),
+          sets: Array.from({ length: exercise.category === "cardio" ? 1 : 4 }, () => defaultSet(exercise)),
         },
       ],
       createdAt: new Date().toISOString(),
@@ -88,9 +90,7 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
         {
           exerciseId: exercise.id,
           restSeconds: Math.round((exercise.restSeconds[0] + exercise.restSeconds[1]) / 2),
-          sets: Array.from({ length: 3 }, () =>
-            exercise.metric === "temps" ? { seconds: 30 } : { reps: exercise.repRange?.[0] ?? 10 },
-          ),
+          sets: Array.from({ length: exercise.category === "cardio" ? 1 : 3 }, () => defaultSet(exercise)),
         },
       ],
     });
@@ -138,31 +138,30 @@ export function ExerciseActions({ exercise }: { exercise: Exercise }) {
       {open ? (
         <div className="flex flex-col gap-2 rounded-xl border border-ink-600 bg-ink-900/60 p-3">
           <div className="grid grid-cols-2 gap-2">
-            {(exercise.metric === "poids-reps" ||
-              exercise.metric === "reps-lestees" ||
-              exercise.metric === "reps" ||
-              exercise.metric === "calories") && (
-              <Field
-                label={exercise.metric === "calories" ? "Calories" : "Répétitions"}
-                value={form.reps}
-                onChange={(v) => setForm({ ...form, reps: v })}
-              />
-            )}
-            {(exercise.metric === "poids-reps" || exercise.metric === "reps-lestees") && (
-              <Field
-                label={exercise.metric === "reps-lestees" ? "Lest (kg)" : "Charge (kg)"}
-                value={form.weight}
-                onChange={(v) => setForm({ ...form, weight: v })}
-                step="0.5"
-              />
-            )}
-            {exercise.metric === "temps" && (
-              <Field label="Durée (s)" value={form.seconds} onChange={(v) => setForm({ ...form, seconds: v })} />
-            )}
-            {exercise.metric === "distance" && (
-              <Field label="Distance (m)" value={form.meters} onChange={(v) => setForm({ ...form, meters: v })} />
+            {fields.map((field) =>
+              field === "seconds" ? (
+                <DurationField
+                  key={field}
+                  value={form.seconds ?? ""}
+                  onChange={(v) => setForm({ ...form, seconds: v })}
+                />
+              ) : (
+                <Field
+                  key={field}
+                  label={labelFor(field, exercise.metric)}
+                  step={FIELD_META[field].step.toString()}
+                  value={form[field] ?? ""}
+                  onChange={(v) => setForm({ ...form, [field]: v })}
+                />
+              ),
             )}
           </div>
+          {fields.length > 1 && (
+            <p className="text-[11px] leading-relaxed text-white/35">
+              Remplis ce que tu as sous les yeux : seul {labelFor(fields[0], exercise.metric).toLowerCase()} sert à
+              classer le record, le reste enrichit l&apos;historique.
+            </p>
+          )}
           <div className="flex gap-2">
             <Button size="sm" onClick={submit}>
               Enregistrer
@@ -260,5 +259,59 @@ function Field({
         className="rounded-lg border border-ink-600 bg-ink-900 px-2 py-1.5 text-sm tabular-nums outline-none focus:border-neon-violet"
       />
     </label>
+  );
+}
+
+/** Convertit une saisie texte en nombre positif, ou `undefined` si vide. */
+function num(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/** Libellé d'un champ, nuancé selon la métrique de l'exercice. */
+function labelFor(field: SetField, metric: string): string {
+  if (field === "weight") return metric === "reps-lestees" ? "Lest (kg)" : "Charge (kg)";
+  if (field === "meters") return "Distance (m)";
+  if (field === "calories") return "Calories (kcal)";
+  return FIELD_META[field].label;
+}
+
+/** Durée en minutes + secondes, pour ne pas avoir à convertir de tête. */
+function DurationField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const total = Number(value || 0);
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  const update = (m: number, s: number) => {
+    const next = Math.max(0, m) * 60 + Math.max(0, s);
+    onChange(next > 0 ? String(next) : "");
+  };
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <span className="text-white/45">Durée</span>
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          inputMode="numeric"
+          min="0"
+          value={minutes || ""}
+          aria-label="Durée : minutes"
+          onChange={(e) => update(Number(e.target.value || 0), seconds)}
+          className="w-full rounded-lg border border-ink-600 bg-ink-900 px-2 py-1.5 text-sm tabular-nums outline-none focus:border-neon-violet"
+        />
+        <span className="text-white/35">min</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min="0"
+          max="59"
+          value={seconds || ""}
+          aria-label="Durée : secondes"
+          onChange={(e) => update(minutes, Number(e.target.value || 0))}
+          className="w-full rounded-lg border border-ink-600 bg-ink-900 px-2 py-1.5 text-sm tabular-nums outline-none focus:border-neon-violet"
+        />
+        <span className="text-white/35">s</span>
+      </div>
+    </div>
   );
 }

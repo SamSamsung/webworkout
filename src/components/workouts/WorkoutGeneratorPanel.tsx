@@ -6,6 +6,7 @@ import type { Difficulty, Equipment } from "@/types/exercise";
 import type { Goal } from "@/types/app";
 import { GOAL_LABELS } from "@/types/app";
 import { EQUIPMENT_META } from "@/data/taxonomy";
+import { describeSet } from "@/lib/sets";
 import { EXERCISES_BY_ID } from "@/data/exercises";
 import { FOCUS_LABELS, generateWorkout, type GeneratorOptions } from "@/lib/generator";
 import { useApp } from "@/store/useApp";
@@ -182,12 +183,10 @@ export function WorkoutGeneratorPanel() {
               const ex = EXERCISES_BY_ID.get(entry.exerciseId);
               if (!ex) return null;
               const set = entry.sets[0];
-              const detail =
-                set.seconds !== undefined
-                  ? `${entry.sets.length} × ${set.seconds} s`
-                  : set.meters !== undefined
-                    ? `${entry.sets.length} × ${set.meters} m`
-                    : `${entry.sets.length} × ${set.reps} reps`;
+              // Même formulation que dans l'historique, pour que l'aperçu
+              // et la séance réalisée se lisent de la même façon.
+              const described = describeSet(ex, set);
+              const detail = entry.sets.length > 1 ? `${entry.sets.length} × ${described}` : described;
               return (
                 <li key={`${entry.exerciseId}-${i}`} className="flex items-center gap-2 text-xs">
                   <span className="w-5 shrink-0 text-white/30">{i + 1}.</span>

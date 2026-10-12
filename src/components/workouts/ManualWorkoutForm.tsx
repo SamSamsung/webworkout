@@ -8,6 +8,7 @@ import { EXERCISES_BY_ID } from "@/data/exercises";
 import { GROUP_META } from "@/data/taxonomy";
 import { estimateCalories } from "@/lib/calculs";
 import { formatDuration } from "@/lib/records";
+import { defaultSet } from "@/lib/sets";
 import { cryptoRandomId } from "@/lib/storage";
 import { dayKey } from "@/lib/streak";
 import { setVolumeKg, setXp } from "@/lib/xp";
@@ -15,6 +16,7 @@ import { useApp } from "@/store/useApp";
 import { BADGES_BY_ID } from "@/lib/badges";
 import { Button, Card, Chip, EmptyState, SectionTitle, StatTile } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
+import { SetFieldInputs } from "./SetFields";
 
 /** Heure locale au format `HH:MM`, pour l'input `time`. */
 function localTime(date: Date): string {
@@ -86,18 +88,14 @@ export function ManualWorkoutForm({
     );
 
   const addExercise = (exercise: Exercise) => {
-    const defaultSet: WorkoutSet =
-      exercise.metric === "temps"
-        ? { seconds: exercise.repRange?.[0] ?? 30, done: true }
-        : exercise.metric === "distance"
-          ? { meters: exercise.repRange?.[0] ?? 200, done: true }
-          : { reps: exercise.repRange?.[0] ?? 10, done: true };
+    const first: WorkoutSet = { ...defaultSet(exercise), done: true };
+    const count = exercise.category === "cardio" ? 1 : 3;
     setEntries((prev) => [
       ...prev,
       {
         exerciseId: exercise.id,
         restSeconds: Math.round((exercise.restSeconds[0] + exercise.restSeconds[1]) / 2),
-        sets: [defaultSet, { ...defaultSet }, { ...defaultSet }],
+        sets: Array.from({ length: count }, () => ({ ...first })),
       },
     ]);
     setPicking(false);
@@ -122,8 +120,14 @@ export function ManualWorkoutForm({
       entries.reduce((total, entry) => {
         const ex = EXERCISES_BY_ID.get(entry.exerciseId);
         if (!ex) return total;
+        // Même règle que pendant une séance en direct : le compteur de la
+        // machine, puis la durée saisie, puis seulement la part de séance.
+        const machine = entry.sets.reduce((sum, set) => sum + (set.calories ?? 0), 0);
+        if (machine > 0) return total + machine;
+        const logged = entry.sets.reduce((sum, set) => sum + (set.seconds ?? 0), 0);
         const share = totals.sets > 0 ? entry.sets.length / totals.sets : 0;
-        return total + estimateCalories(ex.met ?? 5, bodyweight, durationSeconds * share);
+        const seconds = logged > 0 ? logged : durationSeconds * share;
+        return total + estimateCalories(ex.met ?? 5, bodyweight, seconds);
       }, 0),
     );
 
@@ -352,35 +356,11 @@ export function ManualWorkoutForm({
                   {entry.sets.map((set, setIndex) => (
                     <div key={setIndex} className="flex flex-wrap items-center gap-2">
                       <span className="w-14 shrink-0 text-[11px] font-bold text-white/35">Série {setIndex + 1}</span>
-                      {ex.metric === "temps" ? (
-                        <NumberField
-                          label="secondes"
-                          value={set.seconds ?? 0}
-                          onChange={(v) => updateSet(exIndex, setIndex, { seconds: v })}
-                        />
-                      ) : ex.metric === "distance" ? (
-                        <NumberField
-                          label="mètres"
-                          value={set.meters ?? 0}
-                          onChange={(v) => updateSet(exIndex, setIndex, { meters: v })}
-                        />
-                      ) : (
-                        <>
-                          <NumberField
-                            label="reps"
-                            value={set.reps ?? 0}
-                            onChange={(v) => updateSet(exIndex, setIndex, { reps: v })}
-                          />
-                          {(ex.metric === "poids-reps" || ex.metric === "reps-lestees") && (
-                            <NumberField
-                              label="kg"
-                              step={0.5}
-                              value={set.weight ?? 0}
-                              onChange={(v) => updateSet(exIndex, setIndex, { weight: v })}
-                            />
-                          )}
-                        </>
-                      )}
+                      <SetFieldInputs
+                        exercise={ex}
+                        set={set}
+                        onChange={(patch) => updateSet(exIndex, setIndex, patch)}
+                      />
                       <span className="text-[11px] tabular-nums text-white/30">
                         +{setXp(ex, set, bodyweight)} XP
                       </span>
@@ -467,33 +447,6 @@ export function ManualWorkoutForm({
 
       {picking && <ExercisePicker onPick={addExercise} onClose={() => setPicking(false)} />}
     </div>
-  );
-}
-
-function NumberField({
-  label,
-  value,
-  onChange,
-  step = 1,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  step?: number;
-}) {
-  return (
-    <label className="flex items-center gap-1 text-[11px] text-white/40">
-      <input
-        type="number"
-        inputMode="decimal"
-        min={0}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-16 rounded border border-ink-600 bg-ink-900 px-1.5 py-1 text-center text-sm tabular-nums outline-none focus:border-neon-violet"
-      />
-      {label}
-    </label>
   );
 }
 

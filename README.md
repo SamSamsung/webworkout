@@ -2,7 +2,7 @@
 
 **La musculation qui se joue.** Une base d'exercices exhaustive doublée d'un système de progression façon RPG : XP, niveaux, badges, séries d'assiduité, quêtes hebdomadaires et défis entre amis.
 
-> **475 exercices** détaillés · **29 familles** de mouvement · **17 groupes musculaires** · **7 défis chronométrés** · **40 badges** · fonctionne **hors ligne**, **sans compte** et **sans backend**.
+> **481 exercices** détaillés · **29 familles** de mouvement · **17 groupes musculaires** · **7 défis chronométrés** · **40 badges** · fonctionne **hors ligne**, **sans compte** et **sans backend**.
 
 ---
 
@@ -34,7 +34,7 @@
 | **Fiche d'exercice** | Description, exécution pas à pas, erreurs fréquentes, consignes de sécurité, respiration, tempo, repos conseillé, carte musculaire, échelle de progression, variantes de la famille, record personnel |
 | **Séances** | Modèles personnalisés, générateur automatique, historique complet. Le sélecteur d'exercices y reprend toute la richesse de la base : vignette des muscles sollicités, description, technique, erreurs à éviter et lien vers la fiche complète |
 | **Défis** | Deux formats. *Protocole configurable* : EMOM — tu choisis l'exercice, les répétitions et le nombre de tours, et tu refais ta série à chaque top ; ce qu'il te reste dans l'intervalle est ton repos. *Défis à temps* : Bring Sally Up (pompes, squats, tractions), gainage, suspension, chaise au mur, L-sit — chronomètre, règle du jeu, paliers bronze → légende et record personnel |
-| **Entraînement** | Chronomètre, validation des séries, minuteur de repos sonore, XP et volume en direct, écran de fin avec records et badges |
+| **Entraînement** | Chronomètre, validation des séries, minuteur de repos sonore, XP et volume en direct, écran de fin avec records et badges. Sur machine, la série se saisit comme l'écran l'affiche : durée en minutes, distance, calories, niveau de résistance, plus une note libre pour le programme suivi |
 | **Progression** | Courbes d'XP cumulée, volume hebdomadaire, répartition par groupe musculaire, calendrier d'assiduité, records avec courbe de progression |
 | **Social** | Classement XP, gestion des amis, défis sur n'importe quel exercice |
 | **Outils** | 1RM (4 formules), table de pourcentages, chargement de barre, calories par MET, zones cardiaques, IMC, besoins caloriques, minuteur de repos |
@@ -46,18 +46,18 @@
 
 C'est le cœur du projet, et la partie la plus travaillée.
 
-**475 fiches** réparties ainsi :
+**481 fiches** réparties ainsi :
 
 | Groupe | Nb | Groupe | Nb | Groupe | Nb |
 | --- | ---: | --- | ---: | --- | ---: |
-| Pectoraux | 65 | Épaules | 46 | Avant-bras | 15 |
-| Corps entier | 64 | Quadriceps | 45 | Ischio-jambiers | 14 |
-| Dos | 59 | Fessiers | 23 | Mollets | 8 |
+| Pectoraux | 65 | Épaules | 47 | Avant-bras | 15 |
+| Corps entier | 65 | Quadriceps | 45 | Ischio-jambiers | 14 |
+| Dos | 59 | Fessiers | 25 | Mollets | 8 |
 | Abdominaux | 54 | Triceps | 21 | Lombaires | 7 |
-| Cardio | 17 | Biceps | 19 | Adducteurs / abducteurs / cou | 18 |
+| Cardio | 19 | Biceps | 19 | Adducteurs / abducteurs / cou | 18 |
 
-**Par difficulté** : 127 niveau 1 · 120 niveau 2 · 105 niveau 3 · 77 niveau 4 · 43 niveau 5
-**Accessibilité** : 75 exercices sans aucun matériel · 293 réalisables à la maison · 113 unilatéraux
+**Par difficulté** : 129 niveau 1 · 123 niveau 2 · 107 niveau 3 · 78 niveau 4 · 44 niveau 5
+**Accessibilité** : 77 exercices sans aucun matériel · 300 réalisables à la maison · 113 unilatéraux
 
 La base contient aussi des **protocoles nommés** (famille `benchmarks`) : Bring Sally Up et les tests de maintien maximal. Ce ne sont pas des mouvements nouveaux mais des façons précises d'exécuter un mouvement connu, avec une règle du jeu et un score — les loger dans la base leur donne gratuitement records, courbes, XP et badges.
 
@@ -86,7 +86,7 @@ Toute la taxonomie est typée par unions littérales : une fiche mal renseignée
 
 ### Illustrations
 
-Plutôt que 475 photos ou GIF à sourcer, héberger et maintenir, chaque fiche est illustrée par une **carte musculaire SVG** : une silhouette face et dos où les zones sollicitées s'allument — rose pour les muscles principaux, cyan pour les secondaires. Léger, cohérent, et immédiatement lisible.
+Plutôt que 481 photos ou GIF à sourcer, héberger et maintenir, chaque fiche est illustrée par une **carte musculaire SVG** : une silhouette face et dos où les zones sollicitées s'allument — rose pour les muscles principaux, cyan pour les secondaires. Léger, cohérent, et immédiatement lisible.
 
 ---
 
@@ -94,7 +94,7 @@ Plutôt que 475 photos ou GIF à sourcer, héberger et maintenir, chaque fiche e
 
 | Choix | Pourquoi |
 | --- | --- |
-| **Next.js 16 (App Router)** | Les 475 fiches sont **pré-rendues statiquement** (`generateStaticParams`) : navigation instantanée et excellent référencement, ce qui compte pour un site dont l'axe premier est informatif. |
+| **Next.js 16 (App Router)** | Les 481 fiches sont **pré-rendues statiquement** (`generateStaticParams`) : navigation instantanée et excellent référencement, ce qui compte pour un site dont l'axe premier est informatif. |
 | **React 19 + TypeScript strict** | La base d'exercices est typée de bout en bout. Une faute de frappe dans un nom de muscle est une erreur de compilation, pas un bug silencieux. |
 | **Tailwind CSS v4** | Design system déclaré une seule fois dans `globals.css` (`@theme`), couleurs par groupe musculaire réutilisées partout : filtres, badges, graphiques. |
 | **Zustand** | Un store minimal, sans boilerplate. Toutes les mutations passent par un point unique qui recalcule XP, records, série, quêtes et badges de façon cohérente. |
@@ -147,7 +147,7 @@ cp .env.example .env.local
 | Commande | Effet |
 | --- | --- |
 | `npm run dev` | Serveur de développement |
-| `npm run build` | Build de production (pré-rend les 475 fiches) |
+| `npm run build` | Build de production (pré-rend les 481 fiches) |
 | `npm start` | Sert le build de production |
 | `npm run lint` | ESLint (configuration `next/core-web-vitals` + `next/typescript`) |
 | `npm run typecheck` | Vérification TypeScript sans émission |
@@ -245,6 +245,9 @@ XP d'une série = base(métrique) × xpFactor(exercice) × multiplicateur(diffic
 | Répétitions | `reps × 1,2` |
 | Temps | `secondes / 5` |
 | Distance | `mètres / 50` |
+| Calories machine | `calories × 1,5` |
+
+Sur un exercice de cardio, la saisie accepte **durée, distance, calories et niveau de résistance à la fois** — ce qu'affiche l'écran d'une machine. Seule la métrique de l'exercice entre dans le calcul : remplir trois cases pour un même effort ne le compte pas trois fois. Si cette métrique est laissée vide, la première valeur renseignée sert de repli (durée, puis distance, puis calories).
 
 Multiplicateur de difficulté : ×1 (niv. 1-2), ×1,15 (3), ×1,35 (4), ×1,6 (5). Un mouvement unilatéral vaut ×1,7, puisqu'il se réalise des deux côtés.
 
@@ -346,7 +349,7 @@ vercel          # déploiement de prévisualisation
 vercel --prod   # production
 ```
 
-Le build pré-rend les 475 fiches : comptez une à deux minutes.
+Le build pré-rend les 481 fiches : comptez une à deux minutes.
 
 ### Tout autre hébergeur statique
 

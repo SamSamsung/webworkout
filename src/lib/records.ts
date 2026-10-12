@@ -26,8 +26,10 @@ export function scoreRecord(exercise: Exercise, entry: Omit<RecordEntry, "score"
       return Math.round((reps + load * 0.6) * 100) / 100;
     }
     case "reps":
-    case "calories":
       return entry.reps ?? 0;
+    case "calories":
+      // `reps` en repli : ancien emplacement des calories machine.
+      return entry.calories ?? entry.reps ?? 0;
     case "temps":
       return entry.seconds ?? 0;
     case "distance":
@@ -38,7 +40,7 @@ export function scoreRecord(exercise: Exercise, entry: Omit<RecordEntry, "score"
 /** Construit une entrée de record complète (score + date). */
 export function makeRecordEntry(
   exercise: Exercise,
-  values: Pick<RecordEntry, "reps" | "weight" | "seconds" | "meters" | "fromWorkoutId">,
+  values: Pick<RecordEntry, "reps" | "weight" | "seconds" | "meters" | "calories" | "fromWorkoutId">,
   date = new Date().toISOString(),
 ): RecordEntry {
   return { ...values, date, score: scoreRecord(exercise, values) };
@@ -81,7 +83,7 @@ export function formatRecord(exercise: Exercise, entry: RecordEntry): string {
     case "reps":
       return `${entry.reps ?? 0} reps`;
     case "calories":
-      return `${entry.reps ?? 0} kcal`;
+      return `${entry.calories ?? entry.reps ?? 0} kcal`;
     case "temps":
       return formatDuration(entry.seconds ?? 0);
     case "distance":

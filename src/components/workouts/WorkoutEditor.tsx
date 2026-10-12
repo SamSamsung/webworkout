@@ -6,9 +6,11 @@ import type { Exercise } from "@/types/exercise";
 import type { WorkoutExercise, WorkoutSet } from "@/types/app";
 import { EXERCISES_BY_ID } from "@/data/exercises";
 import { GROUP_META } from "@/data/taxonomy";
+import { defaultSet } from "@/lib/sets";
 import { useApp } from "@/store/useApp";
 import { Button, Card, Chip, EmptyState, SectionTitle } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
+import { SetFieldInputs } from "./SetFields";
 
 /**
  * Éditeur de modèle de séance.
@@ -44,19 +46,17 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
     });
 
   const addExercise = (exercise: Exercise) => {
-    const defaultSet: WorkoutSet =
-      exercise.metric === "temps"
-        ? { seconds: exercise.repRange?.[0] ?? 30 }
-        : exercise.metric === "distance"
-          ? { meters: exercise.repRange?.[0] ?? 200 }
-          : { reps: exercise.repRange?.[0] ?? 10 };
+    const first = defaultSet(exercise);
+    // Une machine de cardio se fait en un seul bloc continu : proposer trois
+    // séries de vélo n'a pas de sens, alors que c'est la norme en musculation.
+    const count = exercise.category === "cardio" ? 1 : 3;
     update({
       exercises: [
         ...template.exercises,
         {
           exerciseId: exercise.id,
           restSeconds: Math.round((exercise.restSeconds[0] + exercise.restSeconds[1]) / 2),
-          sets: [defaultSet, { ...defaultSet }, { ...defaultSet }],
+          sets: Array.from({ length: count }, () => ({ ...first })),
         },
       ],
     });
@@ -148,35 +148,11 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
                   {entry.sets.map((set, setIndex) => (
                     <div key={setIndex} className="flex items-center gap-2">
                       <span className="w-14 shrink-0 text-[11px] font-bold text-white/35">Série {setIndex + 1}</span>
-                      {ex.metric === "temps" ? (
-                        <NumberField
-                          label="secondes"
-                          value={set.seconds ?? 0}
-                          onChange={(v) => updateSet(exIndex, setIndex, { seconds: v })}
-                        />
-                      ) : ex.metric === "distance" ? (
-                        <NumberField
-                          label="mètres"
-                          value={set.meters ?? 0}
-                          onChange={(v) => updateSet(exIndex, setIndex, { meters: v })}
-                        />
-                      ) : (
-                        <>
-                          <NumberField
-                            label="reps"
-                            value={set.reps ?? 0}
-                            onChange={(v) => updateSet(exIndex, setIndex, { reps: v })}
-                          />
-                          {(ex.metric === "poids-reps" || ex.metric === "reps-lestees") && (
-                            <NumberField
-                              label="kg"
-                              step={0.5}
-                              value={set.weight ?? 0}
-                              onChange={(v) => updateSet(exIndex, setIndex, { weight: v })}
-                            />
-                          )}
-                        </>
-                      )}
+                      <SetFieldInputs
+                        exercise={ex}
+                        set={set}
+                        onChange={(patch) => updateSet(exIndex, setIndex, patch)}
+                      />
                       <button
                         type="button"
                         aria-label={`Supprimer la série ${setIndex + 1}`}
@@ -216,6 +192,15 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
                     s
                   </label>
                 </div>
+
+                <input
+                  type="text"
+                  value={entry.notes ?? ""}
+                  onChange={(e) => updateExercise(exIndex, { notes: e.target.value || undefined })}
+                  placeholder="Note : programme de la machine, réglages, sensations…"
+                  aria-label={`Note pour ${ex.name}`}
+                  className="w-full rounded-lg border border-ink-700 bg-ink-900/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-white/25 focus:border-neon-violet"
+                />
               </Card>
             );
           })}
@@ -233,33 +218,6 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
 
       {picking && <ExercisePicker onPick={addExercise} onClose={() => setPicking(false)} />}
     </div>
-  );
-}
-
-function NumberField({
-  label,
-  value,
-  onChange,
-  step = 1,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  step?: number;
-}) {
-  return (
-    <label className="flex items-center gap-1 text-[11px] text-white/40">
-      <input
-        type="number"
-        inputMode="decimal"
-        min={0}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-16 rounded border border-ink-600 bg-ink-900 px-1.5 py-1 text-center text-sm tabular-nums outline-none focus:border-neon-violet"
-      />
-      {label}
-    </label>
   );
 }
 

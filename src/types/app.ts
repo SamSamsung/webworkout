@@ -16,6 +16,14 @@ export interface WorkoutSet {
   seconds?: number;
   /** Distance en mètres (course, rameur, portés). */
   meters?: number;
+  /**
+   * Calories affichées par la machine.
+   * C'est la valeur du compteur, pas une estimation : quand elle est
+   * renseignée, elle prime sur le calcul par MET dans le bilan de séance.
+   */
+  calories?: number;
+  /** Niveau de résistance, de pente ou de programme affiché par la machine. */
+  level?: number;
   /** Série validée pendant la séance en direct. */
   done?: boolean;
   /** RPE ressenti de 1 à 10, optionnel. */
@@ -86,6 +94,7 @@ export interface RecordEntry {
   weight?: number;
   seconds?: number;
   meters?: number;
+  calories?: number;
   /** Score normalisé servant à comparer deux performances entre elles. */
   score: number;
   /** Renseigné quand l'entrée provient d'une séance et non d'une saisie manuelle. */
