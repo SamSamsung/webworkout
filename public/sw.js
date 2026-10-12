@@ -15,7 +15,7 @@
  * qui permet au même fichier de fonctionner à la racine d'un domaine comme
  * dans un sous-dossier (GitHub Pages).
  */
-const VERSION = "ironquest-v5";
+const VERSION = "ironquest-v6";
 
 /** Racine de l'application, terminée par « / ». */
 const BASE = new URL(self.registration.scope).pathname;

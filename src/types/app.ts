@@ -37,6 +37,16 @@ export interface WorkoutExercise {
   /** Repos conseillé entre les séries, en secondes. */
   restSeconds: number;
   notes?: string;
+  /**
+   * Exercice réellement réalisé à l'intérieur d'un format (EMOM, Tabata,
+   * AMRAP). « EMOM » seul ne dit rien : c'est « EMOM de tractions » qui
+   * décrit la séance. Facultatif, et sans objet hors de ces formats.
+   */
+  targetExerciseId?: string;
+  /** Répétitions par tour dans ce format. */
+  repsPerRound?: number;
+  /** Nombre de tours prévus. */
+  rounds?: number;
 }
 
 /** Modèle de séance réutilisable, créé par l'utilisateur ou généré. */

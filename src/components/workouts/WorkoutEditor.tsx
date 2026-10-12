@@ -6,10 +6,11 @@ import type { Exercise } from "@/types/exercise";
 import type { WorkoutExercise, WorkoutSet } from "@/types/app";
 import { EXERCISES_BY_ID } from "@/data/exercises";
 import { GROUP_META } from "@/data/taxonomy";
-import { defaultSet } from "@/lib/sets";
+import { defaultSet, isProtocol } from "@/lib/sets";
 import { useApp } from "@/store/useApp";
 import { Button, Card, Chip, EmptyState, SectionTitle } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
+import { ProtocolFields } from "./ProtocolFields";
 import { SetFieldInputs } from "./SetFields";
 
 /**
@@ -21,6 +22,8 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
   const template = useApp((s) => s.state.templates.find((t) => t.id === templateId));
   const saveTemplate = useApp((s) => s.saveTemplate);
   const [picking, setPicking] = useState(false);
+  /** Index de l'exercice dont on choisit le mouvement du protocole. */
+  const [targetFor, setTargetFor] = useState<number | null>(null);
 
   if (!template) {
     return (
@@ -144,6 +147,14 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
                   </div>
                 </div>
 
+                {isProtocol(ex) && (
+                  <ProtocolFields
+                    entry={entry}
+                    onChange={(patch) => updateExercise(exIndex, patch)}
+                    onChooseTarget={() => setTargetFor(exIndex)}
+                  />
+                )}
+
                 <div className="flex flex-col gap-1.5">
                   {entry.sets.map((set, setIndex) => (
                     <div key={setIndex} className="flex items-center gap-2">
@@ -197,7 +208,7 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
                   type="text"
                   value={entry.notes ?? ""}
                   onChange={(e) => updateExercise(exIndex, { notes: e.target.value || undefined })}
-                  placeholder="Note : programme de la machine, réglages, sensations…"
+                  placeholder="Note libre : réglages, programme suivi, sensations…"
                   aria-label={`Note pour ${ex.name}`}
                   className="w-full rounded-lg border border-ink-700 bg-ink-900/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-white/25 focus:border-neon-violet"
                 />
@@ -217,6 +228,16 @@ export function WorkoutEditor({ templateId }: { templateId: string }) {
       </div>
 
       {picking && <ExercisePicker onPick={addExercise} onClose={() => setPicking(false)} />}
+
+      {targetFor !== null && (
+        <ExercisePicker
+          onClose={() => setTargetFor(null)}
+          onPick={(exercise) => {
+            updateExercise(targetFor, { targetExerciseId: exercise.id });
+            setTargetFor(null);
+          }}
+        />
+      )}
     </div>
   );
 }

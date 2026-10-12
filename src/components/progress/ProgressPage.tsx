@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { describeSet } from "@/lib/sets";
+import { describeEntry } from "@/lib/sets";
 import { EXERCISES_BY_ID } from "@/data/exercises";
 import { GROUP_META, METRIC_META } from "@/data/taxonomy";
 import { formatDuration, formatRecord, progressionPercent } from "@/lib/records";
@@ -365,10 +365,7 @@ export function ProgressPage() {
                             Une série unique est décrite par ses valeurs — « 30 min · 12,4 km »
                             en dit plus que « 1 série ». Au-delà, on compte les séries.
                           */}
-                          {ex.name} ·{" "}
-                          {entry.sets.length === 1
-                            ? describeSet(ex, entry.sets[0]) || "1 série"
-                            : `${entry.sets.length} séries`}
+                          {ex.name} · {describeEntry(ex, entry) || "1 série"}
                           {entry.notes ? " · 📝" : ""}
                         </Chip>
                       </li>

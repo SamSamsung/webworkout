@@ -12,7 +12,8 @@
  * pour un même effort le compterait trois fois.
  */
 import type { Equipment, Exercise } from "@/types/exercise";
-import type { WorkoutSet } from "@/types/app";
+import type { WorkoutExercise, WorkoutSet } from "@/types/app";
+import { EXERCISES_BY_ID } from "@/data/exercises";
 import { formatDuration } from "./records";
 
 export type SetField = "reps" | "weight" | "seconds" | "meters" | "calories" | "level";
@@ -131,4 +132,36 @@ export function describeSet(exercise: Exercise, set: WorkoutSet): string {
     else parts.push(`${value} reps`);
   }
   return parts.join(" · ");
+}
+
+/**
+ * `true` pour un format d'entraînement — EMOM, Tabata, AMRAP.
+ *
+ * Ces fiches ne décrivent pas un mouvement mais une façon d'organiser le
+ * temps : elles n'ont de sens qu'accompagnées de l'exercice qu'on y réalise.
+ * Le repérage passe par le tag « format », pour qu'ajouter un protocole à la
+ * base suffise à l'activer, sans toucher au code.
+ */
+export function isProtocol(exercise: Exercise): boolean {
+  return exercise.tags?.includes("format") ?? false;
+}
+
+/** « 8 × Traction en pronation · 10 tours », selon ce qui est renseigné. */
+export function describeProtocol(entry: WorkoutExercise): string {
+  const target = entry.targetExerciseId ? EXERCISES_BY_ID.get(entry.targetExerciseId) : undefined;
+  const parts: string[] = [];
+  if (target) parts.push(entry.repsPerRound ? `${entry.repsPerRound} × ${target.name}` : target.name);
+  else if (entry.repsPerRound) parts.push(`${entry.repsPerRound} reps/tour`);
+  if (entry.rounds) parts.push(`${entry.rounds} tour${entry.rounds > 1 ? "s" : ""}`);
+  return parts.join(" · ");
+}
+
+/** Résumé complet d'un exercice de séance : valeurs de la série et format. */
+export function describeEntry(exercise: Exercise, entry: WorkoutExercise): string {
+  const base =
+    entry.sets.length === 1
+      ? describeSet(exercise, entry.sets[0])
+      : `${entry.sets.length} séries`;
+  const protocol = isProtocol(exercise) ? describeProtocol(entry) : "";
+  return [base, protocol].filter(Boolean).join(" · ");
 }

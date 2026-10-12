@@ -10,12 +10,13 @@ import { estimateCalories } from "@/lib/calculs";
 import { formatDuration } from "@/lib/records";
 import { cryptoRandomId } from "@/lib/storage";
 import { setVolumeKg, setXp } from "@/lib/xp";
-import { defaultSet } from "@/lib/sets";
+import { defaultSet, isProtocol } from "@/lib/sets";
 import { beepRest } from "@/lib/audio";
 import { useApp } from "@/store/useApp";
 import { BADGES_BY_ID } from "@/lib/badges";
 import { Button, Card, Chip, EmptyState, ProgressBar, SectionTitle } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
+import { ProtocolFields } from "./ProtocolFields";
 import { SetFieldInputs } from "./SetFields";
 
 /**
@@ -40,6 +41,7 @@ export function SessionPlayer() {
   const [elapsed, setElapsed] = useState(0);
   const [rest, setRest] = useState<{ remaining: number; total: number } | null>(null);
   const [picking, setPicking] = useState(false);
+  const [targetFor, setTargetFor] = useState<number | null>(null);
   const [summary, setSummary] = useState<{ xp: number; records: string[]; badges: string[]; log: WorkoutLog } | null>(
     null,
   );
@@ -288,6 +290,15 @@ export function SessionPlayer() {
                 </div>
               </div>
 
+              {isProtocol(ex) && (
+                <ProtocolFields
+                  entry={entry}
+                  tone="live"
+                  onChange={(patch) => updateExercise(exIndex, patch)}
+                  onChooseTarget={() => setTargetFor(exIndex)}
+                />
+              )}
+
               <div className="flex flex-col gap-1.5">
                 {entry.sets.map((set, setIndex) => (
                   <div
@@ -330,7 +341,7 @@ export function SessionPlayer() {
                 type="text"
                 value={entry.notes ?? ""}
                 onChange={(e) => updateExercise(exIndex, { notes: e.target.value || undefined })}
-                placeholder="Note : programme, résistance, sensations…"
+                placeholder="Note libre : réglages, programme suivi, sensations…"
                 aria-label={`Note pour ${ex.name}`}
                 className="mt-1.5 w-full rounded-lg border border-ink-700 bg-ink-900/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-white/25 focus:border-neon-violet"
               />
@@ -372,6 +383,16 @@ export function SessionPlayer() {
           </Button>
         </div>
       </div>
+
+      {targetFor !== null && (
+        <ExercisePicker
+          onClose={() => setTargetFor(null)}
+          onPick={(exercise) => {
+            updateExercise(targetFor, { targetExerciseId: exercise.id });
+            setTargetFor(null);
+          }}
+        />
+      )}
 
       {picking && (
         <ExercisePicker

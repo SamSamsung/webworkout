@@ -34,7 +34,7 @@
 | **Fiche d'exercice** | Description, exécution pas à pas, erreurs fréquentes, consignes de sécurité, respiration, tempo, repos conseillé, carte musculaire, échelle de progression, variantes de la famille, record personnel |
 | **Séances** | Modèles personnalisés, générateur automatique, historique complet. Le sélecteur d'exercices y reprend toute la richesse de la base : vignette des muscles sollicités, description, technique, erreurs à éviter et lien vers la fiche complète |
 | **Défis** | Deux formats. *Protocole configurable* : EMOM — tu choisis l'exercice, les répétitions et le nombre de tours, et tu refais ta série à chaque top ; ce qu'il te reste dans l'intervalle est ton repos. *Défis à temps* : Bring Sally Up (pompes, squats, tractions), gainage, suspension, chaise au mur, L-sit — chronomètre, règle du jeu, paliers bronze → légende et record personnel |
-| **Entraînement** | Chronomètre, validation des séries, minuteur de repos sonore, XP et volume en direct, écran de fin avec records et badges. Sur machine, la série se saisit comme l'écran l'affiche : durée en minutes, distance, calories, niveau de résistance, plus une note libre pour le programme suivi |
+| **Entraînement** | Chronomètre, validation des séries, minuteur de repos sonore, XP et volume en direct, écran de fin avec records et badges. Sur machine, la série se saisit comme l'écran l'affiche : durée en minutes, distance, calories, niveau de résistance, plus une note libre pour le programme suivi. Les formats (EMOM, Tabata, AMRAP) portent l'exercice réellement réalisé, les répétitions par tour et le nombre de tours |
 | **Progression** | Courbes d'XP cumulée, volume hebdomadaire, répartition par groupe musculaire, calendrier d'assiduité, records avec courbe de progression |
 | **Social** | Classement XP, gestion des amis, défis sur n'importe quel exercice |
 | **Outils** | 1RM (4 formules), table de pourcentages, chargement de barre, calories par MET, zones cardiaques, IMC, besoins caloriques, minuteur de repos |
@@ -246,6 +246,8 @@ XP d'une série = base(métrique) × xpFactor(exercice) × multiplicateur(diffic
 | Temps | `secondes / 5` |
 | Distance | `mètres / 50` |
 | Calories machine | `calories × 1,5` |
+
+Un **format** — EMOM, Tabata, AMRAP — ne décrit pas un mouvement mais une façon d'organiser le temps : il se complète de l'exercice réalisé à chaque tour, du nombre de répétitions et du nombre de tours (`targetExerciseId`, `repsPerRound`, `rounds`). L'XP reste calculée sur la durée du format, pour ne pas compter deux fois le travail de l'exercice choisi. Le repérage se fait par le tag `format` : ajouter un protocole à la base suffit, sans toucher au code.
 
 Sur une machine à console (vélo, rameur, tapis, elliptique, assault bike), la saisie accepte **durée, distance, calories et niveau de résistance à la fois** — ce qu'affiche l'écran. Hors machine, elle reste minimale : une course se note en distance et en temps, un EMOM ou une corde à sauter en durée seule. Seule la métrique de l'exercice entre dans le calcul : remplir trois cases pour un même effort ne le compte pas trois fois. Si cette métrique est laissée vide, la première valeur renseignée sert de repli (durée, puis distance, puis calories).
 

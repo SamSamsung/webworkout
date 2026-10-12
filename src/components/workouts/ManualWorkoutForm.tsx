@@ -8,7 +8,7 @@ import { EXERCISES_BY_ID } from "@/data/exercises";
 import { GROUP_META } from "@/data/taxonomy";
 import { estimateCalories } from "@/lib/calculs";
 import { formatDuration } from "@/lib/records";
-import { defaultSet } from "@/lib/sets";
+import { defaultSet, isProtocol } from "@/lib/sets";
 import { cryptoRandomId } from "@/lib/storage";
 import { dayKey } from "@/lib/streak";
 import { setVolumeKg, setXp } from "@/lib/xp";
@@ -16,6 +16,7 @@ import { useApp } from "@/store/useApp";
 import { BADGES_BY_ID } from "@/lib/badges";
 import { Button, Card, Chip, EmptyState, SectionTitle, StatTile } from "@/components/ui";
 import { ExercisePicker } from "./ExercisePicker";
+import { ProtocolFields } from "./ProtocolFields";
 import { SetFieldInputs } from "./SetFields";
 
 /** Heure locale au format `HH:MM`, pour l'input `time`. */
@@ -62,6 +63,7 @@ export function ManualWorkoutForm({
   const [minutes, setMinutes] = useState(source?.minutes ?? 45);
   const [entries, setEntries] = useState<WorkoutExercise[]>(source?.exercises ?? []);
   const [picking, setPicking] = useState(false);
+  const [targetFor, setTargetFor] = useState<number | null>(null);
   const [saved, setSaved] = useState<{ xp: number; records: string[]; badges: string[] } | null>(null);
 
   const totals = useMemo(() => {
@@ -79,6 +81,9 @@ export function ManualWorkoutForm({
     }
     return { xp, volume: Math.round(volume), sets };
   }, [entries, bodyweight]);
+
+  const updateExercise = (exIndex: number, patch: Partial<WorkoutExercise>) =>
+    setEntries((prev) => prev.map((e, i) => (i === exIndex ? { ...e, ...patch } : e)));
 
   const updateSet = (exIndex: number, setIndex: number, patch: Partial<WorkoutSet>) =>
     setEntries((prev) =>
@@ -352,6 +357,14 @@ export function ManualWorkoutForm({
                   </div>
                 </div>
 
+                {isProtocol(ex) && (
+                  <ProtocolFields
+                    entry={entry}
+                    onChange={(patch) => updateExercise(exIndex, patch)}
+                    onChooseTarget={() => setTargetFor(exIndex)}
+                  />
+                )}
+
                 <div className="flex flex-col gap-1.5">
                   {entry.sets.map((set, setIndex) => (
                     <div key={setIndex} className="flex flex-wrap items-center gap-2">
@@ -446,6 +459,16 @@ export function ManualWorkoutForm({
       </div>
 
       {picking && <ExercisePicker onPick={addExercise} onClose={() => setPicking(false)} />}
+
+      {targetFor !== null && (
+        <ExercisePicker
+          onClose={() => setTargetFor(null)}
+          onPick={(exercise) => {
+            updateExercise(targetFor, { targetExerciseId: exercise.id });
+            setTargetFor(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -708,7 +708,7 @@ export const CARDIO: Exercise[] = [
     ],
     commonMistakes: ["Choisir un exercice technique : la fatigue dégrade vite l'exécution."],
     safetyTips: ["Échauffement complet obligatoire ; une à deux séances par semaine suffisent."],
-    tags: ["hiit", "protocole", "intense"],
+    tags: ["hiit", "format", "protocole", "intense"],
   }),
   cardio({
     id: "emom-cardio",
