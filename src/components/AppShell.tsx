@@ -97,6 +97,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main className="mx-auto max-w-6xl px-4 py-5">{children}</main>
 
+      {/*
+        Pied de page discret mais présent sur chaque page : les fournisseurs
+        d'identité (Google) exigent que la politique de confidentialité et les
+        conditions soient atteignables depuis le site, sans compte.
+      */}
+      <footer className="mx-auto max-w-6xl px-4 pb-6 pt-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-700/60 pt-4 text-xs text-white/35">
+          <span>⚡ IronQuest</span>
+          <Link href="/confidentialite" className="hover:text-white/70">
+            Confidentialité
+          </Link>
+          <Link href="/conditions" className="hover:text-white/70">
+            Conditions d&apos;utilisation
+          </Link>
+          <a
+            href="https://github.com/SamSamsung/webworkout"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white/70"
+          >
+            Code source
+          </a>
+        </div>
+      </footer>
+
       {/* Menu « Plus » : évite qu'une page soit hors d'atteinte sur mobile. */}
       {moreOpen && (
         <>

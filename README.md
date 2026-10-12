@@ -135,6 +135,8 @@ cp .env.example .env.local
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | non | URL du projet Supabase (`https://xxxx.supabase.co`). Active la synchronisation. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | non | Clé publique `anon` du projet Supabase. |
+| `NEXT_PUBLIC_SITE_OWNER` | non | Nom de l'éditeur affiché comme responsable du traitement sur `/confidentialite` et `/conditions`. |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | non | Adresse de contact sur ces mêmes pages. À défaut, elles renvoient vers les tickets GitHub. |
 
 > ⚠️ Ces deux variables sont **publiques** (préfixe `NEXT_PUBLIC_`) et exposées au navigateur : c'est normal et sûr, à condition que les politiques RLS soient en place — elles le sont dans `supabase/schema.sql`. Ne mettez **jamais** la clé `service_role` dans une variable `NEXT_PUBLIC_`.
 
@@ -282,7 +284,17 @@ Google veut savoir *qui* demande l'accès (l'écran de consentement) et *vers o�
    - *Authorized JavaScript origins* : `https://<votre-site>.vercel.app` (et `http://localhost:3000` pour le développement).
    - *Authorized redirect URIs* : l'URI de rappel du point 1, **collée à l'identique**. Pas de joker, pas de barre oblique finale en trop : le moindre écart donne `redirect_uri_mismatch`.
    - Validez, puis copiez le *Client ID* et le *Client secret*.
-5. **Autorisez votre compte** : *Google Auth Platform → Audience*. Tant que l'app est en mode **Testing**, seules les adresses listées dans *Test users* peuvent se connecter — ajoutez la vôtre. *Publish app* lève la restriction ; avec les seules permissions `email` et `profile`, aucune vérification Google n'est nécessaire.
+5. **Autorisez votre compte** : *Google Auth Platform → Audience*. Tant que l'app est en mode **Testing**, seules les adresses listées dans *Test users* peuvent se connecter — ajoutez la vôtre. Pour un usage personnel, c'est suffisant et c'est le chemin le plus court : le mode *Testing* n'a pas de date d'expiration, et il n'impose ni page légale ni domaine vérifié.
+
+   *Publish app* n'est nécessaire que pour ouvrir la connexion à n'importe qui. Google réclame alors les champs de *Branding* : page d'accueil, politique de confidentialité, conditions d'utilisation, et les domaines correspondants dans *Authorized domains*. Les deux pages existent dans l'application, servies en statique et sans compte :
+
+   | Champ Google | URL |
+   | --- | --- |
+   | *Application home page* | `https://<votre-site>.vercel.app/` |
+   | *Privacy policy link* | `https://<votre-site>.vercel.app/confidentialite` |
+   | *Terms of service link* | `https://<votre-site>.vercel.app/conditions` |
+
+   Renseignez `NEXT_PUBLIC_SITE_OWNER` et `NEXT_PUBLIC_CONTACT_EMAIL` avant de les soumettre, sinon ces pages affichent une mention générique et renvoient vers GitHub pour le contact. Avec les seules permissions `email` et `profile`, la publication ne déclenche aucune vérification manuelle de Google ; en revanche *Authorized domains* n'accepte qu'un domaine dont vous prouvez la propriété dans la Search Console, ce qui est une raison de plus de rester en mode *Testing* avec un sous-domaine `vercel.app`.
 6. **Collez les deux valeurs dans Supabase** (l'onglet du point 1), activez *Enable Sign in with Google*, puis *Save*.
 
 Rechargez la page Profil : **le bouton apparaît tout seul**, sans redéploiement. La carte interroge `/auth/v1/settings` à chaque chargement, donc l'activation est prise en compte immédiatement — contrairement aux variables `NEXT_PUBLIC_`, qui sont figées au build.
