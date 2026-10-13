@@ -82,6 +82,37 @@ export const DEFIS: Exercise[] = [
     tags: ["defi", "benchmark", "culte", "jambes"],
   }),
   defi({
+    id: "bring-sally-up-abdos",
+    name: "Bring Sally Up — abdos",
+    nameEn: "Bring Sally Up leg raise challenge",
+    aliases: ["sally up abdos", "sally abdos", "bring sally up relevés de jambes"],
+    group: "abdominaux",
+    force: "flexion-de-hanche",
+    category: "isométrie",
+    primaryMuscles: ["grand-droit-abdomen", "psoas-iliaque"],
+    secondaryMuscles: ["transverse", "obliques-externes", "quadriceps-droit-femoral"],
+    difficulty: 4,
+    xpFactor: 1.7,
+    met: 7,
+    description:
+      "Le protocole appliqué aux relevés de jambes, allongé sur le dos. Tout le défi est dans le « down » : les jambes redescendent à quelques centimètres du sol et y restent, sans jamais toucher. C'est la position la plus dure, et c'est celle où le morceau laisse le plus longtemps — les lombaires et le psoas tirent bien avant les abdominaux.",
+    steps: [
+      "Allonge-toi sur le dos, mains à plat sous les fessiers ou le long du corps, bas du dos plaqué au sol.",
+      "À « up », monte les jambes tendues à la verticale, sans décoller le bassin d'un coup.",
+      "À « down », redescends les jambes jusqu'à quelques centimètres du sol et TIENS : talons en l'air, lombaires toujours collées.",
+      "Le chrono s'arrête dès que les talons touchent le sol ou que le bas du dos se creuse.",
+    ],
+    addMistakes: [
+      "Laisser le bas du dos se décoller dans le maintien bas : c'est le psoas qui travaille, et les lombaires qui paient.",
+      "Descendre trop bas dès le début : garde une marge, la position se durcit minute après minute.",
+    ],
+    addTips: [
+      "Si les lombaires se creusent, remonte les jambes de quelques centimètres plutôt que d'abandonner la position : le défi reste valable, le dos est préservé.",
+      "Genoux légèrement fléchis en cas d'ischios raides : la contrainte lombaire baisse nettement.",
+    ],
+    tags: ["defi", "benchmark", "culte", "abdominaux", "isometrie"],
+  }),
+  defi({
     id: "bring-sally-up-tractions",
     name: "Bring Sally Up — tractions",
     nameEn: "Bring Sally Up pull-up challenge",
@@ -95,14 +126,17 @@ export const DEFIS: Exercise[] = [
     xpFactor: 2.2,
     repRange: [20, 205],
     description:
-      "La version la plus brutale du protocole : les maintiens se font menton au-dessus de la barre ou bras fléchis. Tenir une minute est déjà un excellent résultat ; le morceau complet relève de l'exploit.",
+      "La version la plus brutale du protocole. Comme partout, le maintien se fait sur le « down » : on redescend et on reste suspendu, bras tendus, épaules engagées — et c'est bien là que ça se joue, parce que le morceau passe beaucoup plus de temps en bas qu'en haut. La poigne et les dorsaux encaissent en continu. Tenir une minute est déjà un excellent résultat.",
     steps: [
       "Suspends-toi en pronation, épaules basses et engagées.",
-      "À « up », monte le menton au-dessus de la barre et maintiens.",
-      "À « down », redescends bras tendus sans te laisser tomber.",
+      "À « up », monte le menton au-dessus de la barre sans t'y attarder.",
+      "À « down », redescends bras tendus et TIENS la suspension active : épaules verrouillées, surtout pas relâchées dans les articulations.",
       "Le chrono s'arrête quand tu lâches la barre.",
     ],
-    addTips: ["La prise lâche souvent avant le dos : prévois de la magnésie et une réception dégagée."],
+    addTips: [
+      "La prise lâche souvent avant le dos : prévois de la magnésie et une réception dégagée.",
+      "La suspension entre deux répétitions est le vrai coût du protocole : garde les épaules actives, ne te laisse jamais pendre passivement sur les articulations.",
+    ],
     tags: ["defi", "benchmark", "elite", "street-workout"],
   }),
 ];

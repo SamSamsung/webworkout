@@ -85,11 +85,11 @@ export const BENCHMARKS: Benchmark[] = [
     name: "Bring Sally Up — tractions",
     exerciseId: "bring-sally-up-tractions",
     icon: "🦅",
-    tagline: "La version brutale. Tenir une minute est déjà un très bon résultat.",
+    tagline: "La version brutale. Le morceau reste en bas : c'est la suspension qui te mange, pas la montée.",
     rules: [
       "Suspends-toi en pronation, épaules basses et engagées.",
-      "À « up », menton au-dessus de la barre, et tu maintiens.",
-      "À « down », bras tendus, sans te laisser tomber.",
+      "À « up », menton au-dessus de la barre, sans t'y attarder.",
+      "À « down », bras tendus, et tu TIENS la suspension active — épaules verrouillées, jamais relâchées.",
       "Le chrono s'arrête quand tu lâches la barre.",
     ],
     tiers: [
@@ -98,6 +98,21 @@ export const BENCHMARKS: Benchmark[] = [
       { label: "Or", seconds: 90, icon: "🥇", color: TIER_COLORS.or },
       { label: "Morceau complet", seconds: 205, icon: "🏆", color: TIER_COLORS.legende },
     ],
+    music: FLOWER,
+  },
+  {
+    id: "sally-abdos",
+    name: "Bring Sally Up — abdos",
+    exerciseId: "bring-sally-up-abdos",
+    icon: "🔥",
+    tagline: "Relevés de jambes. Tout se joue en bas, talons au ras du sol — et le morceau y reste longtemps.",
+    rules: [
+      "Allongé sur le dos, bas du dos plaqué au sol, mains sous les fessiers.",
+      "À « up », jambes tendues à la verticale.",
+      "À « down », jambes à quelques centimètres du sol, et tu TIENS sans jamais toucher.",
+      "Le chrono s'arrête dès que les talons touchent le sol ou que les lombaires se creusent.",
+    ],
+    tiers: sallyTiers(40, 80, 140),
     music: FLOWER,
   },
   {
